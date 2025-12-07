@@ -7,9 +7,31 @@ import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
 import Image from '@tiptap/extension-image'
 import ImageResize from 'tiptap-extension-resize-image'
+import { useEditorStore } from "@/store/use-editor-store";
 
 const Editor = () => {
+
+    const {setEditor} = useEditorStore();
+
   const editor = useEditor({
+    onCreate({editor}){
+        setEditor(editor)
+    },
+    onDestroy(){
+        setEditor(null)
+    },
+    onUpdate({editor}){
+        setEditor(editor)
+    },
+    onFocus({editor}){
+        setEditor(editor)
+    },
+    onBlur({editor}){
+        setEditor(editor)
+    },
+    onSelectionUpdate({editor}){
+        setEditor(editor)
+    },
     extensions: [
       StarterKit,
       TaskList,

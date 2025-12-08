@@ -7,8 +7,9 @@ import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
 import Image from '@tiptap/extension-image'
 import ImageResize from 'tiptap-extension-resize-image'
-import { FontFamily, TextStyle } from '@tiptap/extension-text-style'
+import { FontFamily, TextStyle,Color } from '@tiptap/extension-text-style'
 import { useEditorStore } from "@/store/use-editor-store";
+import { Highlight } from '@tiptap/extension-highlight'
 
 const Editor = () => {
 
@@ -36,6 +37,10 @@ const Editor = () => {
     extensions: [
       StarterKit,
       TextStyle,
+      Color,
+      Highlight.configure({
+        multicolor:true
+      }),
       FontFamily,
       TaskList,
       TaskItem.configure({

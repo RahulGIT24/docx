@@ -10,6 +10,7 @@ import {
 import {
   BoldIcon,
   ChevronDownIcon,
+  HighlighterIcon,
   ItalicIcon,
   ListTodoIcon,
   LucideIcon,
@@ -21,10 +22,66 @@ import {
   UnderlineIcon,
   Undo2Icon,
 } from "lucide-react";
+import { type ColorResult, SketchPicker } from "react-color";
 
 type Font = {
   label: string;
   value: string;
+};
+
+const HighlightColorButton = () => {
+  const { editor } = useEditorStore();
+
+  const value = editor?.getAttributes("highlight").color || "#FFFFFF";
+
+  const onChange = (color: ColorResult) => {
+    editor?.chain().focus().setHighlight({color:color.hex}).run();
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "h-7 min-w-7 z-20 shrink-0 flex items-center flex-col justify-center rounded-sm hover:bg-neutral-300 px-1.5 overflow-hidden text-sm"
+          )}
+        >
+          <HighlighterIcon/>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="border">
+        <SketchPicker color={value} onChange={onChange} />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+const TextColorButton = () => {
+  const { editor } = useEditorStore();
+
+  const value = editor?.getAttributes("textStyle").color || "#000000";
+
+  const onChange = (color: ColorResult) => {
+    editor?.chain().focus().setColor(color.hex).run();
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "h-7 min-w-7 z-20 shrink-0 flex items-center flex-col justify-center rounded-sm hover:bg-neutral-300 px-1.5 overflow-hidden text-sm"
+          )}
+        >
+          <span className="text-xs">A</span>
+          <div className="h-0.5 w-full" style={{ backgroundColor: value }} />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="border">
+        <SketchPicker color={value} onChange={onChange} />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 };
 
 const HeadingLevelButton = () => {
@@ -251,6 +308,8 @@ const ToolBar = () => {
       {sections[1].map((item, _) => (
         <ToolBarButton key={item.label} {...item} />
       ))}
+      <TextColorButton />
+      <HighlightColorButton/>
       |
       <HeadingLevelButton />
       {/* Todo text color */}

@@ -10,6 +10,7 @@ import ImageResize from 'tiptap-extension-resize-image'
 import { FontFamily, TextStyle,Color } from '@tiptap/extension-text-style'
 import { useEditorStore } from "@/store/use-editor-store";
 import { Highlight } from '@tiptap/extension-highlight'
+import Link from '@tiptap/extension-link'
 
 const Editor = () => {
 
@@ -40,6 +41,11 @@ const Editor = () => {
       Color,
       Highlight.configure({
         multicolor:true
+      }),
+      Link.configure({
+        openOnClick:false,
+        autolink:true,
+        defaultProtocol:"https"
       }),
       FontFamily,
       TaskList,

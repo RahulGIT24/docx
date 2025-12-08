@@ -186,8 +186,8 @@
 
   h1,
   h2 {
-    margin-top: 3.5rem;
-    margin-bottom: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 
   h1 {
@@ -277,4 +277,8 @@
       outline: 3px solid var(--primary);
     }
   }
+}
+
+html {
+  --title-font-family: 'Helvetica', sans-serif;
 }

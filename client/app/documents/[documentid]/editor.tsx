@@ -7,6 +7,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
 import Image from '@tiptap/extension-image'
 import ImageResize from 'tiptap-extension-resize-image'
+import { FontFamily, TextStyle } from '@tiptap/extension-text-style'
 import { useEditorStore } from "@/store/use-editor-store";
 
 const Editor = () => {
@@ -34,6 +35,8 @@ const Editor = () => {
     },
     extensions: [
       StarterKit,
+      TextStyle,
+      FontFamily,
       TaskList,
       TaskItem.configure({
         nested: true,

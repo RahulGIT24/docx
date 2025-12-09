@@ -11,6 +11,7 @@ import { FontFamily, TextStyle,Color } from '@tiptap/extension-text-style'
 import { useEditorStore } from "@/store/use-editor-store";
 import { Highlight } from '@tiptap/extension-highlight'
 import Link from '@tiptap/extension-link'
+import TextAlign from '@tiptap/extension-text-align'
 
 const Editor = () => {
 
@@ -37,6 +38,9 @@ const Editor = () => {
     },
     extensions: [
       StarterKit,
+      TextAlign.configure({
+        types:['heading','paragraph']
+      }),
       TextStyle,
       Color,
       Highlight.configure({

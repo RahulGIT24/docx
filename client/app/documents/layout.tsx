@@ -4,8 +4,8 @@ interface DocumentLayoutProps {
 
 const DocumentsLayout = ({children}:DocumentLayoutProps)=>{
     return (
-        <div className="flex flex-col gap-y-4">
-            <p className="bg-red-500">Document Navbar</p>
+        <div className="flex flex-col">
+            <p className="text-md p-1 font-semibold text-blue-700">Docx - Name of Document</p>
             {children}
         </div>
     )

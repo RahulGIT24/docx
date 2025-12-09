@@ -13,6 +13,9 @@ import { Highlight } from '@tiptap/extension-highlight'
 import Link from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 
+// Custom Extension
+import { FontSizeExtension } from "@/extensions/font-size";
+
 const Editor = () => {
 
     const {setEditor} = useEditorStore();
@@ -43,6 +46,7 @@ const Editor = () => {
       }),
       TextStyle,
       Color,
+      FontSizeExtension,
       Highlight.configure({
         multicolor:true
       }),

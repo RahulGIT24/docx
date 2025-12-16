@@ -1,3 +1,4 @@
+import { prisma } from "@/app/prisma/db";
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google";
 
@@ -12,8 +13,8 @@ const handler = NextAuth(
     session: {
       strategy: "jwt"
     },
-    pages:{
-      signIn:"/auth"
+    pages: {
+      signIn: "/auth"
     },
     jwt: {
       secret: process.env.NEXTAUTH_SECRET,
@@ -40,8 +41,17 @@ const handler = NextAuth(
       },
       async signIn(data) {
         const { id, name, email, image } = data.user;
-        // save to db
-        return true
+        if (name && email && image) {
+          if(!await prisma.user.findUnique({
+            where:{
+              email
+            }
+          })){
+            await prisma.user.create({ data: { name: name, email: email, image: image } })
+          }
+          return true;
+        }
+        return false;
       }
     }
   }

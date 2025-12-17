@@ -13,7 +13,7 @@ export const options: AuthOptions = {
         strategy: "jwt"
     },
     pages: {
-        signIn: "/auth"
+        signIn: "/login"
     },
     jwt: {
         secret: process.env.NEXTAUTH_SECRET,

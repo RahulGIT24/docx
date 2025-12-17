@@ -1,18 +1,18 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const token = await getToken({ req: request });
 
     const { pathname, searchParams } = request.nextUrl;
     const publicPaths = [
-        '/auth',
+        '/login',
     ];
 
     const isPublicPath = publicPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
 
     if (!token && !isPublicPath) {
-        return NextResponse.redirect(new URL('/auth', request.url));
+        return NextResponse.redirect(new URL('/login', request.url));
     }
 
     if (token && isPublicPath) {

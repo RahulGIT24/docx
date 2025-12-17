@@ -19,11 +19,11 @@ export const Navbar = () => {
         <SearchInput />
         <div />
         <div className="right-10 absolute">
-          <Button onClick={()=>{
+          <Button className="bg-blue-600 rounded-full cursor-pointer" onClick={()=>{
             signOut()
-            router.replace("/auth")
+            router.replace("/login")
           }}>
-            <LogOutIcon size={4} />
+            Logout<LogOutIcon size={4} />
           </Button>
         </div>
       </div>

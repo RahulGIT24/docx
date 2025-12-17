@@ -39,6 +39,7 @@ export const options: AuthOptions = {
         async signIn(data) {
             const { id, name, email, image } = data.user;
             if (name && email && image) {
+                // console.log(name,email,image)
                 if (!await prisma.user.findUnique({
                     where: {
                         email

@@ -7,15 +7,33 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
+import { PredefinedTemplatesT } from "@/types/types";
+import axios from 'axios';
+import { useEffect, useState } from "react";
 
-const templates = [
-  { id: "blank", label: "Blank Document", imageUrl: "./blank-document.svg",JSON:"" },
-  { id: "for_party", label: "Party Invitation", imageUrl: "./party_invite.png",JSON:"" },
-  { id: "for_bug", label: "Bug Report", imageUrl: "./bug_report.png",JSON:"" },
-  { id: "project_proposal", label: "Project Proposal", imageUrl: "./project_proposal.png",JSON:"" },
-];
+// const templates = [
+//   { id: "blank", name: "Blank Document", preview: "./blank-document.svg",json:"" },
+//   { id: "for_party", name: "Party Invitation", preview: "./party_invite.png",json:"" },
+//   { id: "for_bug", name: "Bug Report", preview: "./bug_report.png",json:"" },
+//   { id: "project_proposal", name: "Project Proposal", preview: "./project_proposal.png",json:"" },
+// ];
 
 const TemplateGallery = () => {
+  const [templates,setTemplates] = useState<PredefinedTemplatesT[]>([])
+  
+  const getTemplates = async()=>{
+    try {
+      const templates = await axios.get('/api/template',{withCredentials:true});
+      setTemplates(templates.data.data)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(()=>{
+    getTemplates()
+  },[])
+
   const isCreating = false;
   return (
     <div className="bg-[#F1F3F4]">
@@ -38,14 +56,14 @@ const TemplateGallery = () => {
                     disabled={isCreating}
                     onClick={() => console.log("Clicked")}
                     style={{
-                      backgroundImage: `url(${temp.imageUrl})`,
+                      backgroundImage: `url(${temp.preview})`,
                       backgroundSize: `cover`,
                       backgroundPosition: `center`,
                       backgroundRepeat: "no-repeat",
                     }}
                     className="size-full hover:border-blue-500 rounded-sm border hover:bg-blue-50 flex flex-col items-center justify-center gap-y-4 bg-white"
                   ></button>
-                  <p className="text-center text-sm font-medium truncate">{temp.label}</p>
+                  <p className="text-center text-sm font-medium truncate">{temp.name}</p>
                 </div>
               </CarouselItem>
             ))}

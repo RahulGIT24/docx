@@ -17,8 +17,9 @@ import TextAlign from "@tiptap/extension-text-align";
 import { FontSizeExtension } from "@/extensions/font-size";
 import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
+import { Document } from "@/types/types";
 
-const Editor = () => {
+const Editor = ({document}:{document:Document}) => {
   const { setEditor } = useEditorStore();
 
   const editor = useEditor({
@@ -69,6 +70,7 @@ const Editor = () => {
       ImageResize,
     ],
     immediatelyRender: false,
+    content:JSON.parse(document.json),
     editorProps: {
       attributes: {
         style: "padding-left: 56px; padding-right: 56px",

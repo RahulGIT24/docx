@@ -7,21 +7,30 @@ export async function POST(request: Request) {
     const body = await request.json();
     const session = await getServerSession(options);
     if (session?.user == null) {
-        return Response.json({ "message": 'Unauthorized' }, { status: 401 });
+      return Response.json({ "message": 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = body;
+    const user = await prisma.user.findUnique({
+      where: {
+        email: session.user.email
+      }
+    })
 
-    let docName:string = "Untitled Document";
-    let loadedJSON:string = "";
+    if (!user) {
+      return Response.json({ error: "User not exist" }, { status: 404 });
+    }
 
-    if(id){
-      const template = await prisma.template.findUnique({where:{id:id}})
-      if(template){
+    let docName: string = "Untitled Document";
+    let loadedJSON: string = "";
+
+    if (id) {
+      const template = await prisma.template.findUnique({ where: { id: id } })
+      if (template) {
         loadedJSON = template.json;
         docName = template.name;
-      }else{
-        return Response.json({error:"Template not found"},{status:404})
+      } else {
+        return Response.json({ error: "Template not found" }, { status: 404 })
       }
     }
 
@@ -29,12 +38,14 @@ export async function POST(request: Request) {
       data: {
         json: loadedJSON,
         name: docName,
-        userId: session.user.id
+        userId: user?.id as number
       }
     })
 
-    return Response.json({ data:createdDoc }, { status: 201 });
+    return Response.json({ data: createdDoc.id }, { status: 201 });
   } catch (error) {
+    console.log(error)
     return Response.json({ error: "Error while creating document" }, { status: 500 });
   }
 }
+

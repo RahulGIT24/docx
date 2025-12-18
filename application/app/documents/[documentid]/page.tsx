@@ -1,23 +1,62 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Editor from "./editor";
 import { Navbar } from "./navbar";
 import ToolBar from "./toolbar";
+import axios from "axios";
+import { useParams, useRouter } from "next/navigation";
+import { Loader2Icon } from "lucide-react";
+import { SkeletonCard, SkeletonEditor } from "@/components/skeleton-component";
+import { Document } from "@/types/types";
 
 interface DocumentIdPageProps {
-  params: Promise<{ documentid: string }>;
+  params: {
+    documentid: string;
+  };
 }
 
-const DocumentIdPage = async ({ params }: DocumentIdPageProps) => {
-  // const doc_id =  (await params).documentid
-  const { documentid } = await params;
+const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
+  const router = useRouter();
+  const { documentid } = useParams<{ documentid: string }>();
+  const [document, setDocument] = useState<Document | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const getDocument = async () => {
+    if (!documentid) return;
+    try {
+      setLoading(true);
+      const res = await axios.get(`/api/doc/${documentid}`, {
+        withCredentials: true,
+      });
+      setDocument(res.data.data);
+    } catch (error) {
+      console.log(error);
+      router.replace("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getDocument();
+  }, [documentid]);
+
   return (
     <div className="min-h-screen bg-[#FAF8FD]">
-      <div className="flex flex-col px-4 pt-2 fixed top-0 left-0 right-0 z-10 bg-[#FAFBFD] print:hidden select-none">
-        <Navbar />
-        <ToolBar />
-      </div>
-      <div className="pt-[114px] print:pt-0 ">
-        <Editor />
-      </div>
+      {loading && !document ? (
+        <SkeletonEditor />
+      ) : (
+        <>
+          <div className="flex flex-col px-4 pt-2 fixed top-0 left-0 right-0 z-10 bg-[#FAFBFD] print:hidden select-none">
+            <Navbar />
+            <ToolBar />
+          </div>
+          <div className="pt-[114px] print:pt-0 ">
+            {document && <Editor document={document} />}
+          </div>
+        </>
+      )}
     </div>
   );
 };

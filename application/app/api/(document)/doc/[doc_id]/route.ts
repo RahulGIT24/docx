@@ -25,18 +25,70 @@ export async function GET(request: NextRequest, { params }: { params: { doc_id: 
         }
 
         const document = await prisma.documents.findUnique({
-            where:{
-                id:Number(id),
-                userId:user.id
+            where: {
+                id: Number(id),
+                userId: user.id
             },
         })
 
         if (!document) {
             return Response.json({ "error": "Document Not Found" }, { status: 404 });
         }
-        const {userId, ...obj} = document;
+        const { userId, ...obj } = document;
 
-        return Response.json({ "data":obj}, { status: 200 });
+        return Response.json({ "data": obj }, { status: 200 });
+
+    } catch (error) {
+        return Response.json({ "error": "Internal Server Error" }, { status: 500 });
+    }
+}
+
+interface Update {
+    name?: string
+}
+export async function PATCH(request: NextRequest, { params }: { params: { doc_id: string } }) {
+    const id = (await params).doc_id;
+    const body = await request.json() as Update;
+
+    try {
+        const session = await getServerSession(options);
+        const { name } = body
+
+        if (!session || !session.user.email) {
+            return Response.json({ "error": "Session Not Found" }, { status: 401 });
+        }
+
+        const user_email = session?.user.email as string
+
+        const user = await prisma.user.findUnique({
+            where: {
+                email: user_email
+            },
+        });
+
+        if (!user) {
+            return Response.json({ "error": "User Not Found" }, { status: 404 });
+        }
+
+        const data: Update = {}
+
+        if (name) {
+            data.name = name;
+        }
+
+        const document = await prisma.documents.update({
+            where: {
+                id: Number(id),
+                userId: user.id
+            },
+            data: data
+        })
+
+        if (!document) {
+            return Response.json({ "error": "Document Not Found" }, { status: 404 });
+        }
+
+        return Response.json({ "data": "Updated Successfully" }, { status: 200 });
 
     } catch (error) {
         return Response.json({ "error": "Internal Server Error" }, { status: 500 });

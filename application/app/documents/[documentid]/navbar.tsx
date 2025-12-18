@@ -41,7 +41,7 @@ interface tableConfig {
   cols: number;
 }
 
-export const Navbar = () => {
+export const Navbar = ({doc_name,doc_id}:{doc_name:string,doc_id:number}) => {
   const { editor } = useEditorStore();
 
   const insertTable = ({ rows, cols }: { rows: number; cols: number }) => {
@@ -117,7 +117,7 @@ export const Navbar = () => {
           <Image src="/logo.svg" alt="Logo" width={36} height={36} />
         </Link>
         <div className="flex flex-col">
-          <DocumentInput />
+          <DocumentInput name={doc_name} doc_id={doc_id}/>
           <div className="flex">
             <Menubar className="border-none bg-transparent shadow-none h-auto p-0">
               <MenubarMenu>

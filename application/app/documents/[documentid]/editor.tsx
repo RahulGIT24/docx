@@ -19,7 +19,7 @@ import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
 import { Document } from "@/types/types";
 
-const Editor = ({document}:{document:Document}) => {
+const Editor = ({ document }: { document: Document }) => {
   const { setEditor } = useEditorStore();
 
   const editor = useEditor({
@@ -70,7 +70,7 @@ const Editor = ({document}:{document:Document}) => {
       ImageResize,
     ],
     immediatelyRender: false,
-    content:JSON.parse(document.json),
+    content: document.json ? JSON.parse(document.json) : "",
     editorProps: {
       attributes: {
         style: "padding-left: 56px; padding-right: 56px",
@@ -81,7 +81,7 @@ const Editor = ({document}:{document:Document}) => {
   });
   return (
     <div className="size-full overflow-x-auto bg-[#F9FBFD] px-4 print:p-0 print:bg-white print:overflow-visible">
-      <Ruler/>
+      <Ruler />
       <div className="min-w-max flex justify-center w-[816px] py-4 print:py-0 mx-auto print:w-full print:min-w-0">
         <EditorContent editor={editor} />
       </div>

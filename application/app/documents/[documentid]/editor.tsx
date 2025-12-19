@@ -1,7 +1,8 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Editor as EditorT } from "@tiptap/react";
 import { TaskList } from "@tiptap/extension-list";
+import debounce from "lodash.debounce";
 import { TaskItem } from "@tiptap/extension-list";
 import StarterKit from "@tiptap/starter-kit";
 import { TableKit } from "@tiptap/extension-table";
@@ -18,9 +19,16 @@ import { FontSizeExtension } from "@/extensions/font-size";
 import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
 import { Document } from "@/types/types";
+import { useEffect } from "react";
+import { useRef } from "react";
 
-const Editor = ({ document }: { document: Document }) => {
+const Editor = ({ document,saveToDB }: { document: Document,saveToDB:(json:string)=>void }) => {
   const { setEditor } = useEditorStore();
+
+  const debounceRef = useRef<
+    | (((editor: EditorT) => void) & { cancel: () => void; flush: () => void })
+    | null
+  >(null);
 
   const editor = useEditor({
     onCreate({ editor }) {
@@ -31,6 +39,7 @@ const Editor = ({ document }: { document: Document }) => {
     },
     onUpdate({ editor }) {
       setEditor(editor);
+      debounceRef.current!(editor);
     },
     onFocus({ editor }) {
       setEditor(editor);
@@ -79,6 +88,27 @@ const Editor = ({ document }: { document: Document }) => {
       },
     },
   });
+
+  useEffect(() => {
+    if (!debounceRef.current) {
+      debounceRef.current = debounce((editor: EditorT) => {
+        const json = JSON.stringify(editor.getJSON());
+        saveToDB(json);
+      }, 1000);
+    }
+    return () => {
+      debounceRef.current?.cancel();
+    };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      debounceRef.current?.flush();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="size-full overflow-x-auto bg-[#F9FBFD] px-4 print:p-0 print:bg-white print:overflow-visible">
       <Ruler />

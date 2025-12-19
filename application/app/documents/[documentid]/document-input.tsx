@@ -1,5 +1,6 @@
 "use client";
 import axios from "axios";
+import { Loader } from "lucide-react";
 import { ChangeEvent, useState } from "react";
 import { BsCloudCheck } from "react-icons/bs";
 
@@ -44,7 +45,7 @@ export const DocumentInput = ({
         <span
           className="text-lg px-1.5 cursor-pointer truncate w-[10vw]"
           onClick={() => {
-            if(updating) return;
+            if (updating) return;
             setInputEnabled(true);
           }}
         >
@@ -76,7 +77,12 @@ export const DocumentInput = ({
           }}
         />
       )}
-      <BsCloudCheck />
+        <BsCloudCheck className="size-4" />
+      {/* {updateState === true ? (
+        <Loader className="size-4 animate-spin" />
+      ) : (
+        <BsCloudCheck className="size-4" />
+      )} */}
     </div>
   );
 };

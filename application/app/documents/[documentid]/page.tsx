@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Editor from "./editor";
 import { Navbar } from "./navbar";
 import ToolBar from "./toolbar";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2Icon } from "lucide-react";
-import { SkeletonCard, SkeletonEditor } from "@/components/skeleton-component";
+import { SkeletonEditor } from "@/components/skeleton-component";
 import { Document } from "@/types/types";
+import { setDocumentInRedis } from "@/lib/document";
 
 interface DocumentIdPageProps {
   params: {
@@ -38,6 +38,23 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
     }
   };
 
+  const updateDocumentJSON = async (json: string) => {
+    try {
+      // updateRef.current = true;
+      await axios.patch(
+        "/api/doc/" + documentid,
+        {
+          json,
+        },
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // updateRef.current = false;
+    }
+  };
+
   useEffect(() => {
     getDocument();
   }, [documentid]);
@@ -51,13 +68,15 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
           <div className="flex flex-col px-4 pt-2 fixed top-0 left-0 right-0 z-10 bg-[#FAFBFD] print:hidden select-none">
             {document && (
               <>
-                <Navbar doc_name={document.name} doc_id={document.id}/>
+                <Navbar doc_name={document.name} doc_id={document.id} />
                 <ToolBar />
               </>
             )}
           </div>
           <div className="pt-[114px] print:pt-0 ">
-            {document && <Editor document={document} />}
+            {document && (
+              <Editor saveToDB={updateDocumentJSON} document={document} />
+            )}
           </div>
         </>
       )}

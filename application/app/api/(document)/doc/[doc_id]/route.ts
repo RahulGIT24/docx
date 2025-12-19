@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: { doc_id: 
             return Response.json({ "error": "Document Not Found" }, { status: 404 });
         }
 
-        const cache = await getDocumentFromRedis(Number(document.id));
+        const cache = await getDocumentFromRedis(`doc:${document.id}`);
 
         if (cache) {
             const { userId, json, ...obj } = document;

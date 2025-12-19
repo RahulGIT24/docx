@@ -49,3 +49,38 @@ export async function POST(request: Request) {
   }
 }
 
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(options);
+    const { searchParams } = new URL(request.url);
+
+    const limit = searchParams.get('limit') ?? 5;
+    if (session?.user == null) {
+      return Response.json({ "message": 'Unauthorized' }, { status: 401 });
+    }
+    const user = await prisma.user.findUnique({
+      where: {
+        email: session.user.email
+      }
+    })
+
+    if (!user) {
+      return Response.json({ error: "User not exist" }, { status: 404 });
+    }
+
+    const docs = await prisma.documents.findMany({
+      where: {
+        userId: user.id
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      },
+      take:Number(limit)
+    })
+
+    return Response.json({ data: docs }, { status: 200 });
+  } catch (error) {
+    console.log(error)
+    return Response.json({ error: "Error while fetching user docs" }, { status: 500 });
+  }
+}

@@ -72,7 +72,8 @@ export async function GET(request: Request) {
 
     const docs = await prisma.documents.findMany({
       where: {
-        userId: user.id
+        userId: user.id,
+        isDeleted:false,
       },
       orderBy: {
         updatedAt: 'desc'
@@ -83,7 +84,8 @@ export async function GET(request: Request) {
 
     const count = await prisma.documents.count({
       where: {
-        userId: user.id
+        userId: user.id,
+        isDeleted:false,
       },
       orderBy: {
         updatedAt: 'desc'

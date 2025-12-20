@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed:db": "tsx prisma/seed.ts",
-    "persist":"tsx worker/persistDocs.ts"
+    "persist": "tsx worker/persistDocs.ts",
+    "hard-delete": "tsx worker/deleteWorker.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.1",
@@ -42,6 +43,7 @@
     "react-icons": "^5.5.0",
     "tailwind-merge": "^3.4.0",
     "tiptap-extension-resize-image": "^1.3.2",
+    "winston": "^3.19.0",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

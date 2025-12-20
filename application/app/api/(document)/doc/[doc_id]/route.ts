@@ -1,5 +1,5 @@
 import { prisma } from '@/app/prisma/db';
-import { getDocumentFromRedis, setDocumentInRedis } from '@/lib/document';
+import { clearDocFromRedis, getDocumentFromRedis, setDocumentInRedis } from '@/lib/document';
 import { options } from '@/lib/options';
 import { getServerSession } from 'next-auth';
 import { NextRequest } from 'next/server';
@@ -28,7 +28,8 @@ export async function GET(request: NextRequest, { params }: { params: { doc_id: 
         const document = await prisma.documents.findUnique({
             where: {
                 id: Number(id),
-                userId: user.id
+                userId: user.id,
+                isDeleted: false,
             },
         })
 
@@ -92,10 +93,57 @@ export async function PATCH(request: NextRequest, { params }: { params: { doc_id
         const document = await prisma.documents.update({
             where: {
                 id: Number(id),
-                userId: user.id
+                userId: user.id,
+                isDeleted: false
             },
             data: data
         })
+
+        if (!document) {
+            return Response.json({ "error": "Document Not Found" }, { status: 404 });
+        }
+
+        return Response.json({ "data": "Updated Successfully" }, { status: 200 });
+
+    } catch (error) {
+        return Response.json({ "error": "Internal Server Error" }, { status: 500 });
+    }
+}
+
+export async function DELETE(request: NextRequest, { params }: { params: { doc_id: string } }) {
+    const id = (await params).doc_id;
+
+    try {
+        const session = await getServerSession(options);
+
+
+        if (!session || !session.user.email) {
+            return Response.json({ "error": "Session Not Found" }, { status: 401 });
+        }
+
+        const user_email = session?.user.email as string
+
+        const user = await prisma.user.findUnique({
+            where: {
+                email: user_email
+            },
+        });
+
+        if (!user) {
+            return Response.json({ "error": "User Not Found" }, { status: 404 });
+        }
+
+        const document = await prisma.documents.update({
+            where: {
+                id: Number(id),
+                userId: user.id,
+                isDeleted: false
+            },
+            data: {
+                isDeleted: true
+            }
+        })
+        await clearDocFromRedis(`doc:${document.id}`);
 
         if (!document) {
             return Response.json({ "error": "Document Not Found" }, { status: 404 });

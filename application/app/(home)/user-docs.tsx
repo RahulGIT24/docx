@@ -44,6 +44,22 @@ const UserDocs = () => {
     }
   };
 
+  const deleteDocument = async (documentid:number) => {
+    if (!documentid) return;
+    try {
+      setLoading(true);
+      await axios.delete(`/api/doc/${documentid}`, {
+        withCredentials: true,
+      });
+      getUserDocs();
+    } catch (error) {
+      console.log(error);
+      router.replace("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getUserDocs();
   }, [page]);
@@ -120,7 +136,10 @@ const UserDocs = () => {
                       {new Date(doc.createdAt).toDateString()}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      <button onClick={(e) => e.stopPropagation()}>
+                      <button onClick={(e) => {
+                        e.stopPropagation()
+                        deleteDocument(doc.id);
+                      }}>
                         <Trash2Icon color="red" />
                       </button>
                     </TableCell>

@@ -1,15 +1,18 @@
 import { prisma } from '@/app/prisma/db';
+import logger from '@/lib/logger';
 
 const hardDelete = async()=>{
     try {
-        await prisma.documents.deleteMany({
+        const deleted = await prisma.documents.deleteMany({
             where:{
                 isDeleted:true
             },
             limit:100
         })
+        if(deleted.count == 0) return;
+        logger.info("Delete Documents from Table. Docs Info: ",deleted);
     } catch (error) {
-        console.log("Error while hard deleting data");
+        logger.error("Error while hard deleting data");
     }
 }
 

@@ -1,157 +1,144 @@
 import { prisma } from '@/app/prisma/db';
+import { ApiError } from '@/lib/apiError';
+import { asyncHandler } from '@/lib/asyncHandler';
 import { clearDocFromRedis, getDocumentFromRedis, setDocumentInRedis } from '@/lib/document';
 import { options } from '@/lib/options';
 import { getServerSession } from 'next-auth';
 import { NextRequest } from 'next/server';
 
-export async function GET(request: NextRequest, { params }: { params: { doc_id: string } }) {
+export const GET = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {
     const id = (await params).doc_id;
-    try {
-        const session = await getServerSession(options);
+    const session = await getServerSession(options);
 
-        if (!session || !session.user.email) {
-            return Response.json({ "error": "Session Not Found" }, { status: 401 });
-        }
-
-        const user_email = session?.user.email as string
-
-        const user = await prisma.user.findUnique({
-            where: {
-                email: user_email
-            },
-        });
-
-        if (!user) {
-            return Response.json({ "error": "User Not Found" }, { status: 404 });
-        }
-
-        const document = await prisma.documents.findUnique({
-            where: {
-                id: Number(id),
-                userId: user.id,
-                isDeleted: false,
-            },
-        })
-
-        if (!document) {
-            return Response.json({ "error": "Document Not Found" }, { status: 404 });
-        }
-
-        const cache = await getDocumentFromRedis(`doc:${document.id}`);
-
-        if (cache) {
-            const { userId, json, ...obj } = document;
-            const objToSend = { ...obj, json: cache }
-            return Response.json({ "data": objToSend }, { status: 200 });
-        } else {
-            const { userId, ...obj } = document;
-            return Response.json({ "data": obj }, { status: 200 });
-        }
-    } catch (error) {
-        return Response.json({ "error": "Internal Server Error" }, { status: 500 });
+    if (!session || !session.user.email) {
+        throw new ApiError("Unauthorized", 401)
     }
-}
+
+    const user_email = session?.user.email as string
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email: user_email
+        },
+    });
+
+    if (!user) {
+        throw new ApiError("User Not Found", 404);
+    }
+
+    const document = await prisma.documents.findUnique({
+        where: {
+            id: Number(id),
+            userId: user.id,
+            isDeleted: false,
+        },
+    })
+
+    if (!document) {
+        throw new ApiError("Document Not Found", 404);
+    }
+
+    const cache = await getDocumentFromRedis(`doc:${document.id}`);
+
+    if (cache) {
+        const { userId, json, ...obj } = document;
+        const objToSend = { ...obj, json: cache }
+        return Response.json({ "data": objToSend }, { status: 200 });
+    } else {
+        const { userId, ...obj } = document;
+        return Response.json({ "data": obj }, { status: 200 });
+    }
+})
 
 interface Update {
     name?: string
     json?: string
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { doc_id: string } }) {
+export const PATCH = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {
     const id = (await params).doc_id;
     const body = await request.json() as Update;
 
-    try {
-        const session = await getServerSession(options);
-        const { name, json } = body
+    const session = await getServerSession(options);
+    const { name, json } = body
 
-        if (!session || !session.user.email) {
-            return Response.json({ "error": "Session Not Found" }, { status: 401 });
-        }
-
-        const user_email = session?.user.email as string
-
-        const user = await prisma.user.findUnique({
-            where: {
-                email: user_email
-            },
-        });
-
-        if (!user) {
-            return Response.json({ "error": "User Not Found" }, { status: 404 });
-        }
-
-        const data: Update = {}
-        if (json) {
-            await setDocumentInRedis(Number(id), json);
-        }
-
-        if (name) {
-            data.name = name;
-        }
-
-        const document = await prisma.documents.update({
-            where: {
-                id: Number(id),
-                userId: user.id,
-                isDeleted: false
-            },
-            data: data
-        })
-
-        if (!document) {
-            return Response.json({ "error": "Document Not Found" }, { status: 404 });
-        }
-
-        return Response.json({ "data": "Updated Successfully" }, { status: 200 });
-
-    } catch (error) {
-        return Response.json({ "error": "Internal Server Error" }, { status: 500 });
+    if (!session || !session.user.email) {
+        throw new ApiError('Unauthorized', 401)
     }
-}
 
-export async function DELETE(request: NextRequest, { params }: { params: { doc_id: string } }) {
+    const user_email = session?.user.email as string
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email: user_email
+        },
+    });
+
+    if (!user) {
+        throw new ApiError('User Not Found', 404)
+    }
+
+    const data: Update = {}
+    if (json) {
+        await setDocumentInRedis(Number(id), json);
+    }
+
+    if (name) {
+        data.name = name;
+    }
+
+    const document = await prisma.documents.update({
+        where: {
+            id: Number(id),
+            userId: user.id,
+            isDeleted: false
+        },
+        data: data
+    })
+
+    if (!document) {
+        throw new ApiError('Document Not Found', 404)
+    }
+
+    return Response.json({ "data": "Updated Successfully" }, { status: 200 });
+})
+
+export const DELETE = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {
     const id = (await params).doc_id;
-
-    try {
-        const session = await getServerSession(options);
+    const session = await getServerSession(options);
 
 
-        if (!session || !session.user.email) {
-            return Response.json({ "error": "Session Not Found" }, { status: 401 });
-        }
-
-        const user_email = session?.user.email as string
-
-        const user = await prisma.user.findUnique({
-            where: {
-                email: user_email
-            },
-        });
-
-        if (!user) {
-            return Response.json({ "error": "User Not Found" }, { status: 404 });
-        }
-
-        const document = await prisma.documents.update({
-            where: {
-                id: Number(id),
-                userId: user.id,
-                isDeleted: false
-            },
-            data: {
-                isDeleted: true
-            }
-        })
-        await clearDocFromRedis(`doc:${document.id}`);
-
-        if (!document) {
-            return Response.json({ "error": "Document Not Found" }, { status: 404 });
-        }
-
-        return Response.json({ "data": "Updated Successfully" }, { status: 200 });
-
-    } catch (error) {
-        return Response.json({ "error": "Internal Server Error" }, { status: 500 });
+    if (!session || !session.user.email) {
+        throw new ApiError('Unauthorized', 401)
     }
-}
+
+    const user_email = session?.user.email as string
+
+    const user = await prisma.user.findUnique({
+        where: {
+            email: user_email
+        },
+    });
+
+    if (!user) {
+        throw new ApiError('User not found', 404)
+    }
+
+    const document = await prisma.documents.update({
+        where: {
+            id: Number(id),
+            userId: user.id,
+            isDeleted: false
+        },
+        data: {
+            isDeleted: true
+        }
+    })
+    await clearDocFromRedis(`doc:${document.id}`);
+
+    if (!document) {
+        throw new ApiError('Document not found', 404)
+    }
+
+    return Response.json({ "data": "Updated Successfully" }, { status: 200 });
+})

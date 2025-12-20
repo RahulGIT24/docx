@@ -1,24 +1,30 @@
 import { prisma } from "@/app/prisma/db";
 import { redis } from "@/config/redis";
 import { clearDocFromRedis, getDocumentFromRedis } from "@/lib/document";
+import logger from "@/lib/logger";
 
 export async function persistDocs() {
-    const keys = await redis.keys("doc:*");
+    try {
+        const keys = await redis.keys("doc:*");
 
-    for (const key of keys) {
-        const json = await getDocumentFromRedis(key) as string;
-        const [_, id] = key.split(':');
-        await prisma.documents.update({
-            where: {
-                id: Number(id)
-            },
-            data: {
-                json: json
-            }
-        })
-        console.log(`${key} Saved to DB`)
-        await clearDocFromRedis(key);
-    }
+        for (const key of keys) {
+            const json = await getDocumentFromRedis(key) as string;
+            const [_, id] = key.split(':');
+            await prisma.documents.update({
+                where: {
+                    id: Number(id)
+                },
+                data: {
+                    json: json
+                }
+            })
+            logger.info(`${key} Saved to DB`)
+            await clearDocFromRedis(key);
+        }
+    } catch (error) {
+        logger.info("Error occured while persisting docs: ",error)
+    }   
+
 }
 
 function sleep(ms: number) {

@@ -55,6 +55,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
     const limit = searchParams.get('limit') ?? 5;
+    const page = searchParams.get('page') ?? 1;
     if (session?.user == null) {
       return Response.json({ "message": 'Unauthorized' }, { status: 401 });
     }
@@ -67,6 +68,7 @@ export async function GET(request: Request) {
     if (!user) {
       return Response.json({ error: "User not exist" }, { status: 404 });
     }
+    const skip = (Number(page) - 1) * Number(limit);
 
     const docs = await prisma.documents.findMany({
       where: {
@@ -75,10 +77,20 @@ export async function GET(request: Request) {
       orderBy: {
         updatedAt: 'desc'
       },
-      take:Number(limit)
+      take:Number(limit),
+      skip:skip
     })
 
-    return Response.json({ data: docs }, { status: 200 });
+    const count = await prisma.documents.count({
+      where: {
+        userId: user.id
+      },
+      orderBy: {
+        updatedAt: 'desc'
+      },
+    })
+
+    return Response.json({ data: docs,count }, { status: 200 });
   } catch (error) {
     console.log(error)
     return Response.json({ error: "Error while fetching user docs" }, { status: 500 });

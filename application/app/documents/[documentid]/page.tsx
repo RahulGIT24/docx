@@ -7,20 +7,14 @@ import ToolBar from "./toolbar";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { SkeletonEditor } from "@/components/skeleton-component";
-import { Document } from "@/types/types";
-import { setDocumentInRedis } from "@/lib/document";
+import { useEditorStore } from "@/store/use-editor-store";
 
-interface DocumentIdPageProps {
-  params: {
-    documentid: string;
-  };
-}
-
-const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
+const DocumentIdPage = () => {
   const router = useRouter();
   const { documentid } = useParams<{ documentid: string }>();
-  const [document, setDocument] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const { setDocument, document } = useEditorStore();
 
   const getDocument = async () => {
     if (!documentid) return;
@@ -38,26 +32,13 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
     }
   };
 
-  const updateDocumentJSON = async (json: string) => {
-    try {
-      // updateRef.current = true;
-      await axios.patch(
-        "/api/doc/" + documentid,
-        {
-          json,
-        },
-        { withCredentials: true }
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
-      // updateRef.current = false;
-    }
-  };
-
   useEffect(() => {
     getDocument();
   }, [documentid]);
+
+  useEffect(() => {
+    return () => setDocument(null);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FAF8FD]">
@@ -68,16 +49,12 @@ const DocumentIdPage = ({ params }: DocumentIdPageProps) => {
           <div className="flex flex-col px-4 pt-2 fixed top-0 left-0 right-0 z-10 bg-[#FAFBFD] print:hidden select-none">
             {document && (
               <>
-                <Navbar doc_name={document.name} doc_id={document.id} />
+                <Navbar />
                 <ToolBar />
               </>
             )}
           </div>
-          <div className="pt-[114px] print:pt-0 ">
-            {document && (
-              <Editor saveToDB={updateDocumentJSON} document={document} />
-            )}
-          </div>
+          <div className="pt-[114px] print:pt-0 ">{document && <Editor />}</div>
         </>
       )}
     </div>

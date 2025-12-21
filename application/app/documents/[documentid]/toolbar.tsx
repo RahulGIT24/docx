@@ -17,12 +17,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/store/use-editor-store";
+import axios from "axios";
 import {
   AlignCenterIcon,
   AlignJustifyIcon,
   AlignLeftIcon,
   AlignRightIcon,
   BoldIcon,
+  Bot,
   ChevronDownIcon,
   HighlighterIcon,
   ImageIcon,
@@ -52,24 +54,24 @@ const LineHeightButton = () => {
 
   const lineheights = [
     {
-      label:'Default',
-      value:'normal'
+      label: "Default",
+      value: "normal",
     },
     {
-      label:'Single',
-      value:'1'
+      label: "Single",
+      value: "1",
     },
     {
-      label:'1.15',
-      value:'1.15'
+      label: "1.15",
+      value: "1.15",
     },
     {
-      label:'1.5',
-      value:'1.5'
+      label: "1.5",
+      value: "1.5",
     },
     {
-      label:'Double',
-      value:'2'
+      label: "Double",
+      value: "2",
     },
   ];
 
@@ -90,7 +92,8 @@ const LineHeightButton = () => {
             key={value}
             className={cn(
               "flex justify-between items-center gap-x-2.5 hover:bg-neutral-300",
-              editor?.getAttributes('paragraph').lineHeight==value && "bg-neutral-300"
+              editor?.getAttributes("paragraph").lineHeight == value &&
+                "bg-neutral-300"
             )}
             onClick={() => editor?.chain().focus().setLineHeight(value).run()}
           >
@@ -586,6 +589,70 @@ const FontFamilyButton = () => {
   );
 };
 
+const AiTextGeneration = () => {
+  const { editor } = useEditorStore();
+
+  const [query, setQuery] = useState("");
+  const [dialogState, setDialogState] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+
+  const writingFn = async () => {
+    if (!query) return;
+    try {
+      setQuery("");
+      setDisabled(true);
+      const res = await axios.post(
+        "/api/generate-content",
+        { query },
+        { withCredentials: true }
+      );
+      console.log(res);
+      setDialogState(false);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setDisabled(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        className={cn(
+          "h-7 min-w-7 z-20 shrink-0 flex items-center flex-col justify-center rounded-sm hover:bg-neutral-300 px-1.5 overflow-hidden text-sm cursor-pointer"
+        )}
+        title="Bot Assistance"
+        onClick={() => setDialogState(true)}
+      >
+        <Bot />
+      </button>
+      <Dialog
+        open={dialogState}
+        onOpenChange={() => setDialogState(!dialogState)}
+      >
+        <DialogContent title="d-content">
+          <DialogTitle>AI Bot Assistance for writing</DialogTitle>
+          <Input
+            placeholder="What you want to write today?"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                writingFn();
+              }
+            }}
+          />
+          <Button disabled={query === "" || disabled} onClick={writingFn}>
+            Start Writing
+          </Button>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
 interface ToolBarButtonProps {
   onClick?: () => void;
   isActive?: boolean;
@@ -706,11 +773,13 @@ const ToolBar = () => {
       <LinkButton />
       <ImageButton />
       <AlignButton />
-      <LineHeightButton/>
+      <LineHeightButton />
       <ListButton />|
       {sections[2].map((item, _) => (
         <ToolBarButton key={item.label} {...item} />
       ))}
+      |
+      <AiTextGeneration />
     </div>
   );
 };

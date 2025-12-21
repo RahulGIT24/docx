@@ -18,12 +18,29 @@ import TextAlign from "@tiptap/extension-text-align";
 import { FontSizeExtension } from "@/extensions/font-size";
 import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
-import { Document } from "@/types/types";
 import { useEffect } from "react";
 import { useRef } from "react";
+import axios from "axios";
 
-const Editor = ({ document,saveToDB }: { document: Document,saveToDB:(json:string)=>void }) => {
-  const { setEditor } = useEditorStore();
+const Editor = () => {
+  const { setEditor, document } = useEditorStore();
+  const saveToDB = async (json: string) => {
+    if (!document) return;
+    try {
+      // updateRef.current = true;
+      await axios.patch(
+        "/api/doc/" + document.id,
+        {
+          json,
+        },
+        { withCredentials: true }
+      );
+    } catch (error) {
+      console.log(error);
+    } finally {
+      // updateRef.current = false;
+    }
+  };
 
   const debounceRef = useRef<
     | (((editor: EditorT) => void) & { cancel: () => void; flush: () => void })
@@ -79,7 +96,7 @@ const Editor = ({ document,saveToDB }: { document: Document,saveToDB:(json:strin
       ImageResize,
     ],
     immediatelyRender: false,
-    content: document.json ? JSON.parse(document.json) : "",
+    content: document?.json ? JSON.parse(document?.json) : "",
     editorProps: {
       attributes: {
         style: "padding-left: 56px; padding-right: 56px",

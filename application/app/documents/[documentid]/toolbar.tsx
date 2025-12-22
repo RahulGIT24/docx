@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useEditorStore } from "@/store/use-editor-store";
 import axios from "axios";
@@ -590,11 +591,10 @@ const FontFamilyButton = () => {
 };
 
 const AiTextGeneration = () => {
-  const { editor } = useEditorStore();
-
   const [query, setQuery] = useState("");
   const [dialogState, setDialogState] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const { editor } = useEditorStore();
 
   const writingFn = async () => {
     if (!query) return;
@@ -606,7 +606,11 @@ const AiTextGeneration = () => {
         { query },
         { withCredentials: true }
       );
-      console.log(res);
+      const renderableJSON = JSON.parse(res.data.data);
+      const endPosition = editor?.state.doc.content.size;
+      if (endPosition) {
+        editor?.chain().insertContentAt(endPosition, renderableJSON).run();
+      }
       setDialogState(false);
     } catch (error) {
       console.log(error);
@@ -632,20 +636,16 @@ const AiTextGeneration = () => {
       >
         <DialogContent title="d-content">
           <DialogTitle>AI Bot Assistance for writing</DialogTitle>
-          <Input
+          <Textarea
             placeholder="What you want to write today?"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
             }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                writingFn();
-              }
-            }}
+            className="h-[12vh]"
           />
           <Button disabled={query === "" || disabled} onClick={writingFn}>
-            Start Writing
+            Generate <Bot/>
           </Button>
         </DialogContent>
       </Dialog>

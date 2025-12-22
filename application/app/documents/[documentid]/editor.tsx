@@ -56,6 +56,7 @@ const Editor = () => {
     },
     onUpdate({ editor }) {
       setEditor(editor);
+      // console.log(editor.getJSON())
       debounceRef.current!(editor);
     },
     onFocus({ editor }) {

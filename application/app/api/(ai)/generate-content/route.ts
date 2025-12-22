@@ -18,6 +18,7 @@ export const POST = asyncHandler(async (req: NextRequest) => {
     }
 
     const res = await aiWrite(query);
+    console.log(res);
 
     return Response.json({ data: res }, { status: 200 });
 })

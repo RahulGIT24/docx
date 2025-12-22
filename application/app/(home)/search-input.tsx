@@ -1,29 +1,32 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useSearchParam } from "@/hooks/use-search-param";
+import { useAppStore } from "@/store/use-app-store";
 import { SearchIcon, XIcon } from "lucide-react";
 import { useRef, useState } from "react";
 
 export const SearchInput = () => {
   const inputRef = useRef<HTMLInputElement>(null);
-  
+  const [value, setValue] = useState("");
+
+  const allDocuments = useAppStore(s=>s.allDocuments)
+  const setAllDocuments = useAppStore(s=>s.setAllDocuments)
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
   };
-  
-  const [search,setSearch] = useSearchParam('search')
-  const [value, setValue] = useState(search);
 
-  const handleSubmit = (e:React.FormEvent<HTMLFormElement>)=>{
-    e.preventDefault();
-    inputRef.current?.blur()
-    setSearch(value);
+  const callForSearch = async()=>{
+    try {
+      
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   return (
     <div className="flex-1 flex items-center justify-center">
-      <form className="relative max-w-[720px] w-full" onSubmit={handleSubmit}>
+      <form className="relative max-w-[720px] w-full">
         <Input
           value={value}
           onChange={handleChange}
@@ -44,10 +47,10 @@ export const SearchInput = () => {
             type="button"
             variant={"ghost"}
             size={"icon"}
-            onClick={()=>{
-              setValue("")
-              inputRef.current?.blur()
-              setSearch('')
+            onClick={() => {
+              setValue("");
+              inputRef.current?.blur();
+              // setSearch('')
             }}
             className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full"
           >

@@ -7,14 +7,14 @@ import ToolBar from "./toolbar";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { SkeletonEditor } from "@/components/skeleton-component";
-import { useEditorStore } from "@/store/use-editor-store";
+import { useAppStore } from "@/store/use-app-store";
 
 const DocumentIdPage = () => {
   const router = useRouter();
   const { documentid } = useParams<{ documentid: string }>();
   const [loading, setLoading] = useState(true);
 
-  const { setDocument, document } = useEditorStore();
+  const { setDocument, document } = useAppStore();
 
   const getDocument = async () => {
     if (!documentid) return;

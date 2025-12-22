@@ -11,7 +11,6 @@ import {
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Document } from "@/types/types";
 import {
   Pagination,
   PaginationContent,
@@ -21,9 +20,11 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Trash2Icon } from "lucide-react";
+import { useAppStore } from "@/store/use-app-store";
 
 const UserDocs = () => {
-  const [docs, setDocs] = useState<Document[]>([]);
+  const  docs  = useAppStore(s=>s.allDocuments);
+  const  setDocs  = useAppStore(s=>s.setAllDocuments);
   const [loading, setLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
@@ -44,7 +45,7 @@ const UserDocs = () => {
     }
   };
 
-  const deleteDocument = async (documentid:number) => {
+  const deleteDocument = async (documentid: number) => {
     if (!documentid) return;
     try {
       setLoading(true);
@@ -136,10 +137,12 @@ const UserDocs = () => {
                       {new Date(doc.createdAt).toDateString()}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                      <button onClick={(e) => {
-                        e.stopPropagation()
-                        deleteDocument(doc.id);
-                      }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteDocument(doc.id);
+                        }}
+                      >
                         <Trash2Icon color="red" />
                       </button>
                     </TableCell>

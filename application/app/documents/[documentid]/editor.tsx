@@ -9,7 +9,7 @@ import { TableKit } from "@tiptap/extension-table";
 import Image from "@tiptap/extension-image";
 import ImageResize from "tiptap-extension-resize-image";
 import { FontFamily, TextStyle, Color } from "@tiptap/extension-text-style";
-import { useEditorStore } from "@/store/use-editor-store";
+import { useAppStore } from "@/store/use-app-store";
 import { Highlight } from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
@@ -23,7 +23,8 @@ import { useRef } from "react";
 import axios from "axios";
 
 const Editor = () => {
-  const { setEditor, document } = useEditorStore();
+  const setEditor = useAppStore(s=>s.setEditor);
+  const document = useAppStore(s=>s.document);
   const saveToDB = async (json: string) => {
     if (!document) return;
     try {

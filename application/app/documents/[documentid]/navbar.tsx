@@ -33,7 +33,7 @@ import {
   Undo2Icon,
 } from "lucide-react";
 import { BsFilePdf, BsFileText } from "react-icons/bs";
-import { useEditorStore } from "@/store/use-editor-store";
+import { useAppStore } from "@/store/use-app-store";
 import { useMemo } from "react";
 
 interface tableConfig {
@@ -42,7 +42,8 @@ interface tableConfig {
 }
 
 export const Navbar = () => {
-  const { editor, document: doc } = useEditorStore();
+  const editor = useAppStore((s) => s.editor);
+  const doc = useAppStore((s) => s.document);
 
   const insertTable = ({ rows, cols }: { rows: number; cols: number }) => {
     editor?.chain().focus().insertTable({ rows, cols }).run();

@@ -9,8 +9,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Pagination,
   PaginationContent,
@@ -23,9 +23,14 @@ import { Trash2Icon } from "lucide-react";
 import { useAppStore } from "@/store/use-app-store";
 
 const UserDocs = () => {
-  const  docs  = useAppStore(s=>s.allDocuments);
-  const  setDocs  = useAppStore(s=>s.setAllDocuments);
-  const [loading, setLoading] = useState(true);
+  const docs = useAppStore((s) => s.allDocuments);
+  const setDocs = useAppStore((s) => s.setAllDocuments);
+  const loading = useAppStore((s) => s.docLoader);
+  const setLoading = useAppStore((s) => s.setDocLoader);
+
+  const searchParams = useSearchParams();
+  const searchVal = searchParams.get("search");
+
   const [totalPages, setTotalPages] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(6);
@@ -33,6 +38,7 @@ const UserDocs = () => {
 
   const getUserDocs = async () => {
     try {
+      setLoading(true);
       const res = await axios.get(`/api/doc?limit=${limit}&page=${page}`, {
         withCredentials: true,
       });
@@ -62,14 +68,12 @@ const UserDocs = () => {
   };
 
   useEffect(() => {
-    getUserDocs();
-  }, [page]);
-
-  useEffect(() => {
-    if (docs.length > 0) {
-      console.log();
+    if (searchVal) {
+      setTotalPages(0);
+      return;
     }
-  }, [docs]);
+    getUserDocs();
+  }, [page, searchVal]);
 
   return !loading && docs.length === 0 ? (
     <div className="min-h-full">

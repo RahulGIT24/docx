@@ -1,32 +1,81 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useSearchParam } from "@/hooks/use-search-param";
 import { useAppStore } from "@/store/use-app-store";
+import axios from "axios";
 import { SearchIcon, XIcon } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+function debounce(fn: any, timeout = 1000) {
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: any) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn(...args);
+    }, timeout);
+  };
+}
 
 export const SearchInput = () => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [value, setValue] = useState("");
+  const [search, setSearch] = useSearchParam("search");
+  const [value, setValue] = useState(search);
+  const setDocs = useAppStore((s) => s.setAllDocuments);
+  const setLoading = useAppStore((s)=>s.setDocLoader);
 
-  const allDocuments = useAppStore(s=>s.allDocuments)
-  const setAllDocuments = useAppStore(s=>s.setAllDocuments)
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-  };
-
-  const callForSearch = async()=>{
+  const searchUserDocs = async (term: string) => {
+    
+    if (!term) {
+      return;
+    }
+    setLoading(true);
     try {
-      
+      const res = await axios.get(`/api/doc/search?to_search=${term}`, {
+        withCredentials: true,
+      });
+      setDocs(res.data.data);
     } catch (error) {
       console.log(error);
+    }finally{
+      setLoading(true);
     }
-  }
+  };
+
+  const searchDebounceRef = useRef<((term: string) => void) | null>(null);
+
+  useEffect(() => {
+    searchDebounceRef.current = debounce((term: string) => {
+      searchUserDocs(term);
+    }, 500);
+  }, []);
+
+  useEffect(() => {
+    if (search) {
+      searchUserDocs(search);
+    }
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setSearch(newValue);
+    setValue(newValue);
+
+    if (newValue === "") {
+      setSearch("");
+    }
+
+    if (searchDebounceRef.current) {
+      searchDebounceRef.current(newValue);
+    }
+  };
 
   return (
     <div className="flex-1 flex items-center justify-center">
-      <form className="relative max-w-[720px] w-full">
+      <form
+        className="relative max-w-[720px] w-full"
+        onSubmit={(e) => e.preventDefault()}
+      >
         <Input
           value={value}
           onChange={handleChange}
@@ -50,7 +99,7 @@ export const SearchInput = () => {
             onClick={() => {
               setValue("");
               inputRef.current?.blur();
-              // setSearch('')
+              setSearch("");
             }}
             className="absolute top-1/2 right-3 -translate-y-1/2 rounded-full"
           >

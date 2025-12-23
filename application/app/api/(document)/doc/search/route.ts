@@ -2,14 +2,13 @@ import { prisma } from "@/app/prisma/db";
 import { ApiError } from "@/lib/apiError";
 import { asyncHandler } from "@/lib/asyncHandler";
 import { getServerSession } from "next-auth";
-import { useSearchParams } from "next/navigation";
 import { NextRequest } from "next/server";
 
 export const GET = asyncHandler(async (req: NextRequest) => {
 
-    const params = useSearchParams();
+    const { searchParams } = new URL(req.url);
 
-    const doc_name = params.get("to_search");
+    const doc_name = searchParams.get("to_search");
 
     if (!doc_name) {
         throw new ApiError("Please Provide document name", 404);
@@ -38,10 +37,6 @@ export const GET = asyncHandler(async (req: NextRequest) => {
             userId: user.id
         }
     })
-
-    if (!documents || documents.length == 0) {
-        throw new ApiError("Document not found", 404);
-    }
 
     return Response.json({ data: documents }, { status: 200 });
 })

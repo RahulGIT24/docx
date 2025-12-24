@@ -13,22 +13,20 @@ import { useAppStore } from "@/store/use-app-store";
 import { Highlight } from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
-
-// Custom Extension
 import { FontSizeExtension } from "@/extensions/font-size";
 import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
 import { useEffect } from "react";
 import { useRef } from "react";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 
 const Editor = () => {
-  const setEditor = useAppStore(s=>s.setEditor);
-  const document = useAppStore(s=>s.document);
+  const setEditor = useAppStore((s) => s.setEditor);
+  const document = useAppStore((s) => s.document);
   const saveToDB = async (json: string) => {
     if (!document) return;
     try {
-      // updateRef.current = true;
       await axios.patch(
         "/api/doc/" + document.id,
         {
@@ -38,8 +36,6 @@ const Editor = () => {
       );
     } catch (error) {
       console.log(error);
-    } finally {
-      // updateRef.current = false;
     }
   };
 
@@ -48,7 +44,10 @@ const Editor = () => {
     | null
   >(null);
 
+  const params = useSearchParams();
+
   const editor = useEditor({
+    editable:params.get("token") && document && document.sharingToken===params.get("token") ? document.editAccess : true,
     onCreate({ editor }) {
       setEditor(editor);
     },
@@ -57,7 +56,6 @@ const Editor = () => {
     },
     onUpdate({ editor }) {
       setEditor(editor);
-      // console.log(editor.getJSON())
       debounceRef.current!(editor);
     },
     onFocus({ editor }) {

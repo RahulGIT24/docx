@@ -11,6 +11,13 @@ export interface Document {
     isShared: boolean
     json: string
     name: string
-    sharingUrl: string | null
+    sharingToken: string | null
+    editAccess:boolean
     updatedAt: string
+    sharingUrl:string | null
+}
+
+export interface DocumentRendererProps {
+    doc_id?:number
+    collab_token?:string
 }

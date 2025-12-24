@@ -1,18 +1,15 @@
 "use client";
+import { useAppStore } from "@/store/use-app-store";
 import axios from "axios";
-import { Loader } from "lucide-react";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { BsCloudCheck } from "react-icons/bs";
 
-export const DocumentInput = ({
-  name,
-  doc_id,
-}: {
-  name: string;
-  doc_id: number;
-}) => {
-  const [prevName, setPrevName] = useState(name);
-  const [input, setInput] = useState<string>(name);
+export const DocumentInput = () => {
+  const document = useAppStore((s) => s.document);
+  const setDocument = useAppStore((s) => s.setDocument);
+
+  const [prevName, setPrevName] = useState(document?.name || "");
+  const [input, setInput] = useState<string>(document?.name || "");
   const [inputEnabled, setInputEnabled] = useState(false);
   const [updating, setUpdating] = useState(false);
 
@@ -20,11 +17,25 @@ export const DocumentInput = ({
     setInput(e.target.value);
   };
 
+  useEffect(() => {
+    if (!document) return;
+    setInput(document.name);
+    setPrevName(document.name);
+  }, [document?.name]);
+
   const updateName = async () => {
+    if (!document) return;
+    if(!input){
+      setInput(prevName);
+    }
     try {
+      setDocument({
+        ...document,
+        name: input,
+      });
       setUpdating(true);
       await axios.patch(
-        "/api/doc/" + doc_id,
+        "/api/doc/" + document?.id,
         {
           name: input,
         },
@@ -32,7 +43,10 @@ export const DocumentInput = ({
       );
       setPrevName(input);
     } catch (error) {
-      console.log(error);
+      setDocument({
+        ...document,
+        name: prevName,
+      });
       setInput(prevName);
     } finally {
       setUpdating(false);
@@ -77,7 +91,7 @@ export const DocumentInput = ({
           }}
         />
       )}
-        <BsCloudCheck className="size-4" />
+      <BsCloudCheck className="size-4" />
       {/* {updateState === true ? (
         <Loader className="size-4 animate-spin" />
       ) : (

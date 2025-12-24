@@ -25,6 +25,7 @@ import { AlignButton } from "../(toolbar-components)/align-button";
 import { LineHeightButton } from "../(toolbar-components)/line-height";
 import { ListButton } from "../(toolbar-components)/list-button";
 import { AiTextGeneration } from "../(toolbar-components)/ai-textgen";
+import Collaborate from "../(toolbar-components)/collaborate";
 
 interface ToolBarButtonProps {
   onClick?: () => void;
@@ -153,6 +154,8 @@ const ToolBar = () => {
       ))}
       |
       <AiTextGeneration />
+      |
+      <Collaborate/>
     </div>
   );
 };

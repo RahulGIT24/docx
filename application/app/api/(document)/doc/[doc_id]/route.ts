@@ -3,6 +3,7 @@ import { ApiError } from '@/lib/apiError';
 import { asyncHandler } from '@/lib/asyncHandler';
 import { clearDocFromRedis, getDocumentFromRedis, setDocumentInRedis } from '@/lib/document';
 import { options } from '@/lib/options';
+import { generateToken } from '@/lib/randomToken';
 import { getServerSession } from 'next-auth';
 import { NextRequest } from 'next/server';
 
@@ -53,6 +54,9 @@ export const GET = asyncHandler(async (request: NextRequest, { params }: { param
 interface Update {
     name?: string
     json?: string
+    isShared?: boolean,
+    sharingToken?: string | null,
+    editAccess?: boolean
 }
 
 export const PATCH = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {
@@ -60,7 +64,7 @@ export const PATCH = asyncHandler(async (request: NextRequest, { params }: { par
     const body = await request.json() as Update;
 
     const session = await getServerSession(options);
-    const { name, json } = body
+    const { name, json, isShared, editAccess } = body
 
     if (!session || !session.user.email) {
         throw new ApiError('Unauthorized', 401)
@@ -87,6 +91,16 @@ export const PATCH = asyncHandler(async (request: NextRequest, { params }: { par
         data.name = name;
     }
 
+    data.isShared = isShared
+    data.editAccess = editAccess
+
+    if (isShared === false) {
+        data.sharingToken = null;
+    }
+    if (isShared === true) {
+        data.sharingToken = generateToken();
+    }
+
     const document = await prisma.documents.update({
         where: {
             id: Number(id),
@@ -100,7 +114,7 @@ export const PATCH = asyncHandler(async (request: NextRequest, { params }: { par
         throw new ApiError('Document Not Found', 404)
     }
 
-    return Response.json({ "data": "Updated Successfully" }, { status: 200 });
+    return Response.json({ "data": document, }, { status: 200 });
 })
 
 export const DELETE = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {

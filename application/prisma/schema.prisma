@@ -18,7 +18,9 @@ model User {
 model Documents {
   id         Int     @id @default(autoincrement())
   name       String
-  sharingUrl String?
+  sharingToken String?
+  collaborationToken String?
+  editAccess Boolean @default(false)
   isShared   Boolean @default(false)
   json       String
   createdAt DateTime @default(now())

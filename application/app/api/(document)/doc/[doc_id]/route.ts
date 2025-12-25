@@ -93,9 +93,10 @@ export const PATCH = asyncHandler(async (request: NextRequest, { params }: { par
 
     data.isShared = isShared
     data.editAccess = editAccess
-
+    
     if (isShared === false) {
         data.sharingToken = null;
+        data.editAccess=false;
     }
     if (isShared === true) {
         data.sharingToken = generateToken();

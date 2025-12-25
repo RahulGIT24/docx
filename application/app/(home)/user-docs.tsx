@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Pagination,
@@ -21,12 +21,14 @@ import {
 } from "@/components/ui/pagination";
 import { Trash2Icon } from "lucide-react";
 import { useAppStore } from "@/store/use-app-store";
+import { getCollabToken } from "@/lib/getCollabToken";
 
 const UserDocs = () => {
   const docs = useAppStore((s) => s.allDocuments);
   const setDocs = useAppStore((s) => s.setAllDocuments);
   const loading = useAppStore((s) => s.docLoader);
   const setLoading = useAppStore((s) => s.setDocLoader);
+  const setCollabToken = useAppStore((s)=>s.setUserCollabToken);
 
   const searchParams = useSearchParams();
   const searchVal = searchParams.get("search");
@@ -74,6 +76,14 @@ const UserDocs = () => {
     }
     getUserDocs();
   }, [page, searchVal]);
+  
+
+  useEffect(()=>{
+    (async()=>{
+      const res = await getCollabToken();
+      setCollabToken(res);
+    })()
+  },[])
 
   return !loading && docs.length === 0 ? (
     <div className="min-h-full">

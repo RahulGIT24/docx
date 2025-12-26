@@ -5,6 +5,30 @@ import { NextRequest } from "next/server";
 import jwt from 'jsonwebtoken';
 import { prisma } from "@/app/prisma/db";
 
+const generateToken = async (userId: number, name: string, secret: string) => {
+    const payload = {
+        'userId': userId,
+        'name': name
+    }
+
+    const options = {
+        expiresIn: 3600
+    }
+
+    const token = jwt.sign(payload, secret, options);
+
+    await prisma.user.update({
+        where: {
+            id: userId
+        },
+        data: {
+            collaborationToken: token
+        }
+    })
+
+    return token;
+}
+
 export const POST = asyncHandler(async (req: NextRequest) => {
     const session = await getServerSession()
 
@@ -16,11 +40,12 @@ export const POST = asyncHandler(async (req: NextRequest) => {
 
     const user = await prisma.user.findUnique({
         where: {
-            id: session.user.id
+            email: session.user.email
         },
         select: {
             collaborationToken: true,
-            id: true
+            id: true,
+            name: true
         }
     })
 
@@ -33,30 +58,14 @@ export const POST = asyncHandler(async (req: NextRequest) => {
             jwt.verify(user.collaborationToken, secret);
             return new Response(JSON.stringify({ "data": user.collaborationToken }), { status: 200 });
         } catch (error) {
-            const payload = {
-                'userId': session.user.id,
-                'name': session.user.name
-            }
-
-            const options = {
-                expiresIn: 3600
-            }
-
-            const token = jwt.sign(payload, secret, options);
-
-            await prisma.user.update({
-                where: {
-                    id: session.user.id
-                },
-                data: {
-                    collaborationToken: token
-                }
-            })
+            const token = generateToken(user.id, user.name, secret);
 
             return new Response(JSON.stringify({ "data": token }), { status: 200 });
         }
     }
-    throw new ApiError("Problem while generating token", 400)
+    const token = generateToken(user.id, user.name, secret);
+
+    return new Response(JSON.stringify({ "data": token }), { status: 200 });
 })
 
 export const GET = asyncHandler(async (req: NextRequest) => {

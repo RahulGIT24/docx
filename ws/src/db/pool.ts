@@ -1,6 +1,8 @@
 import { Pool } from "pg";
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 5,
-});
+export function connectToDB(url:string) {
+  return  new Pool({
+    connectionString: url,
+    max: 5,
+  });
+}

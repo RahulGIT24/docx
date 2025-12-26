@@ -6,7 +6,7 @@ import { Database } from './lib/db';
 
 dotenv.config()
 
-const db = new Database();
+const db = new Database(process.env.DATABASE_URL!);
 
 const PORT = Number(process.env.PORT) || 8080;
 const TOKEN_SECRET = process.env.TOKEN_SECRET!;
@@ -78,9 +78,9 @@ function leaveRoom(ws: any) {
 }
 
 wss.on("connection", (ws, req) => {
-    const url = new URL(req.url as string);
+    const url = new URL(req.url!, `${process.env.BASE_URL}:${PORT}`);
     const auth_token = url.searchParams.get("token");
-    let user_id = null;
+    let user_id = '';
 
     if (!auth_token) {
         ws.send(JSON.stringify({ "error": "Auth token Not found" }))
@@ -89,8 +89,12 @@ wss.on("connection", (ws, req) => {
     }
 
     try {
-        const payload = JSON.parse(decodeToken(TOKEN_SECRET, auth_token) as string);
-        user_id = payload?.id;
+        const data = decodeToken(TOKEN_SECRET, auth_token);
+        user_id = data.userId;
+        ws.send(JSON.stringify({
+            type: "connect",
+            data: "Connection Accepted"
+        }));
     } catch (err) {
         if (err instanceof jwt.TokenExpiredError) {
             ws.send(JSON.stringify({ "type": "error", "data": "Token Expired" }))
@@ -111,6 +115,12 @@ wss.on("connection", (ws, req) => {
 
     ws.on('message', async (message) => {
         try {
+            if (typeof message !== "string" && !Buffer.isBuffer(message)) {
+                return;
+            }
+
+            const text = message.toString().trim();
+            if (!text) return;
             parsed_msg = JSON.parse(message.toString());
         } catch {
             ws.send(JSON.stringify({ type: "error", data: "Invalid JSON" }));

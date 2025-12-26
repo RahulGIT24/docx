@@ -10,10 +10,7 @@ interface AppState {
     allDocuments: [] | Document[],
     docLoader: boolean,
     setDocLoader: (a: boolean) => void,
-    setAllDocuments: (document: Document[] | []) => void
-    userCollabToken: string | null
-    setUserCollabToken: (token: string | null) => void
-}
+    setAllDocuments: (document: Document[] | []) => void}
 
 export const useAppStore = create<AppState>((set) => ({
     editor: null,
@@ -24,6 +21,4 @@ export const useAppStore = create<AppState>((set) => ({
     docLoader: true,
     setDocLoader: (docLoader) => set({ docLoader }),
     setAllDocuments: (allDocuments) => set({ allDocuments }),
-    userCollabToken: null,
-    setUserCollabToken: (userCollabToken) => set({ userCollabToken })
 }))

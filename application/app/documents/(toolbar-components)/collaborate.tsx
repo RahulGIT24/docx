@@ -11,11 +11,15 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useCollabStore } from "@/store/use-collab-store";
+import { generateCollabToken, getCollabToken } from "@/lib/getCollabToken";
 
 const Collaborate = () => {
   const [dialogState, setDialogState] = useState(false);
   const [docSharing, setDocSharing] = useState(false);
   const [editAccess, setEditAccess] = useState(false);
+  const { collabToken, setCollabToken, connect, disconnect } = useCollabStore();
+  const [editAccLoader, seteditAccLoader] = useState(false);
 
   const doc = useAppStore((s) => s.document);
   const setDoc = useAppStore((s) => s.setDocument);
@@ -29,6 +33,7 @@ const Collaborate = () => {
   const onChangeDocSharing = async (state: boolean) => {
     if (!doc) return;
 
+    seteditAccLoader(true);
     const prev = docSharing;
     setDocSharing(state);
 
@@ -57,6 +62,8 @@ const Collaborate = () => {
       }
     } catch (err) {
       setDocSharing(prev);
+    } finally {
+      seteditAccLoader(false);
     }
   };
 
@@ -77,10 +84,20 @@ const Collaborate = () => {
         ...doc,
         editAccess: state,
       });
-      if (state) {
-        toast.success("Editing enabled in document");
+
+      toast.success("Editing Status Updated");
+
+      if (!state) {
+        // let token = collabToken;
+
+        // if (!token) {
+        //   token = await generateCollabToken();
+        //   setCollabToken(token);
+        // }
+
+        // connect(token as string);
+        disconnect();
       } else {
-        toast.success("Editing disabled in document");
       }
     } catch (err) {
       setEditAccess(prev);
@@ -117,6 +134,7 @@ const Collaborate = () => {
           {docSharing && (
             <div className="flex items-center space-x-2 mt-2">
               <Switch
+                disabled={editAccLoader}
                 id="allow-edit"
                 checked={editAccess}
                 onCheckedChange={onChangeEditAccess}

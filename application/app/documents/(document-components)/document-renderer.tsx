@@ -9,11 +9,18 @@ import { Navbar } from "../[documentid]/navbar";
 import ToolBar from "../[documentid]/toolbar";
 import Editor from "../[documentid]/editor";
 import { Lock } from "lucide-react";
+import { useCollabStore } from "@/store/use-collab-store";
+import { generateCollabToken, getCollabToken } from "@/lib/getCollabToken";
 
 const DocumentRenderer = ({ collab_token, doc_id }: DocumentRendererProps) => {
   const router = useRouter();
+  const connect = useCollabStore((s) => s.connect);
   const [loading, setLoading] = useState(true);
+  const collabToken = useCollabStore((s) => s.collabToken);
+  const setCollabToken = useCollabStore((s) => s.setCollabToken);
   const { setDocument, document } = useAppStore();
+
+  const socket = useCollabStore((s) => s.socket);
 
   const getDocument = async () => {
     if (!doc_id) return;
@@ -45,7 +52,6 @@ const DocumentRenderer = ({ collab_token, doc_id }: DocumentRendererProps) => {
       const res = await axios.get(`/api/doc/collab?token=${collab_token}`, {
         withCredentials: true,
       });
-      // if(res.data.null)
       setDocument(res.data.data);
     } catch (error) {
       router.replace("/");
@@ -66,6 +72,55 @@ const DocumentRenderer = ({ collab_token, doc_id }: DocumentRendererProps) => {
       getDocumentByToken();
     }
   }, [collab_token, doc_id]);
+
+  useEffect(() => {
+    if (!document) return;
+    if (document?.editAccess && collabToken) {
+      connect(collabToken as string);
+    }
+    // if(document?.editAccess && !collabToken){
+    //   const token =  generateCollabToken().then()
+    //   setCollabToken(token.then(d=>d));
+    //   connect(collabToken as string);
+    // }
+  }, [document,collabToken]);
+
+  useEffect(() => {
+    if (!socket) return;
+    if (!document) return;
+    if (!document.editAccess) return;
+
+    if (socket.readyState !== WebSocket.OPEN) {
+      socket.addEventListener(
+        "open",
+        () => {
+          socket.send(
+            JSON.stringify({
+              type: "collab",
+              data: document.sharingToken,
+            })
+          );
+        },
+        { once: true }
+      );
+
+      return;
+    }
+
+    socket.send(
+      JSON.stringify({
+        type: "collab",
+        data: document.sharingToken,
+      })
+    );
+  }, [socket, document]);
+
+  useEffect(() => {
+    (async () => {
+      const res = await getCollabToken();
+      setCollabToken(res);
+    })();
+  }, []);
 
   return (
     <>

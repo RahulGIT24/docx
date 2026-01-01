@@ -1,60 +1,91 @@
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Document } from "@/types/types";
 import { generateCollabToken } from "@/lib/getCollabToken";
 import { useCollabStore } from "@/store/use-collab-store";
-import { Document } from "@/types/types";
-import { useEffect } from "react";
 
 export function useCollaboration(document: Document) {
-    const { socket, connect, disconnect, collabToken, setCollabToken } =
-        useCollabStore();
+  const router = useRouter();
+  const {
+    socket,
+    connect,
+    disconnect,
+    collabToken,
+    setCollabToken,
+  } = useCollabStore();
 
-    useEffect(() => {
-        if (!document?.editAccess) return;
+  useEffect(() => {
+    if (!document?.editAccess) return;
 
-        const init = async () => {
-            let token = collabToken;
+    const init = async () => {
+      let token = collabToken;
+      if (!token) {
+        token = await generateCollabToken();
+        setCollabToken(token);
+      }
+      connect(token!);
+    };
 
-            if (!token) {
-                token = await generateCollabToken();
-                setCollabToken(token);
-            }
+    init();
+  }, [document]);
 
-            connect(token as string);
-        };
+  useEffect(() => {
+    if (!socket || !document?.editAccess) return;
 
-        init();
-    }, [document]);
+    const join = () => {
+      socket.send(
+        JSON.stringify({
+          type: "request-collab",
+          data: document.sharingToken,
+        })
+      );
+    };
 
-    useEffect(() => {
-        if (!socket || !document?.editAccess) return;
+    socket.readyState === WebSocket.OPEN
+      ? join()
+      : socket.addEventListener("open", join, { once: true });
+  }, [socket, document]);
 
-        const join = () =>
-            socket.send(
-                JSON.stringify({
-                    type: "collab",
-                    data: document.sharingToken,
-                })
-            );
+  useEffect(() => {
+    if (!socket) return;
 
-        socket.readyState === WebSocket.OPEN
-            ? join()
-            : socket.addEventListener("open", join, { once: true });
-    }, [socket, document]);
+    const onMessage = async (e: MessageEvent) => {
+      const msg = JSON.parse(e.data);
 
-    useEffect(() => {
-        if (!socket) return;
+      if (msg.type === "collab-approved") {
+        console.log("Collaboration approved for doc:", msg.docId);
+        return;
+      }
 
-        const onMessage = async (e: MessageEvent) => {
-            const msg = JSON.parse(e.data);
-            if (msg.type !== "error") return;
+      if (msg.type !== "error") return;
 
-            if (msg.data === "Token Expired") {
-                disconnect();
-            }
-        };
+      switch (msg.data) {
+        case "Token Expired": {
+          disconnect();
+          const token = await generateCollabToken();
+          setCollabToken(token);
+          connect(token);
+          break;
+        }
 
-        socket.addEventListener("message", onMessage);
-        return () => socket.removeEventListener("message", onMessage);
-    }, [socket]);
+        case "Room is full (max 3 users)": {
+          disconnect();
+          toast.info("Max users reached. View-only mode.");
+          break;
+        }
 
-    useEffect(() => () => disconnect(), []);
+        case "Invalid Token": {
+          toast.error("Authentication failed");
+          router.push("/");
+          break;
+        }
+      }
+    };
+
+    socket.addEventListener("message", onMessage);
+    return () => socket.removeEventListener("message", onMessage);
+  }, [socket]);
+
+  useEffect(() => () => disconnect(), []);
 }

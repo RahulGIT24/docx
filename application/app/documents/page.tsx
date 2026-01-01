@@ -1,7 +1,7 @@
-'use client';
+"use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
-import DocumentRenderer from "./(document-components)/document-renderer";
+import { DocumentRenderer } from "./(document-components)/document-renderer";
 
 const CollabDocument = () => {
   const params = useSearchParams();
@@ -9,13 +9,15 @@ const CollabDocument = () => {
 
   useEffect(() => {
     if (!params.get("token")) {
-        router.replace('/');
+      router.replace("/");
     }
   }, [params]);
 
-  return <div className="min-h-screen bg-[#FAF8FD]">
-    <DocumentRenderer collab_token={params.get("token") as string}/>
-  </div>;
+  return (
+    <div className="min-h-screen bg-[#FAF8FD]">
+      <DocumentRenderer collab_token={params.get("token") as string} />
+    </div>
+  );
 };
 
 export default CollabDocument;

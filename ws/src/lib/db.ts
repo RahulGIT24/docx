@@ -12,11 +12,10 @@ export class Database {
         if(!this.pool) return;
         const { rowCount, rows } = await this.pool.query(`SELECT * FROM "Documents" WHERE "sharingToken" = $1 and "editAccess" = true`, [doc_token]);
         if (rowCount === 1) {
-            const documentData = rows[0]; // This is your data object
+            const documentData = rows[0];
             return documentData.id;
         }
 
         return null;
     }
-
 }

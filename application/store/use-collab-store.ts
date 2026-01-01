@@ -23,6 +23,7 @@ export const useCollabStore = create<CollabState>((set, get) => ({
     },
 
     disconnect: () => {
+        console.log("Disconnected")
         get().socket?.close();
         set({ socket: null, roomId: null });
     },

@@ -11,11 +11,14 @@ import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
+import { useCollabStore } from "@/store/use-collab-store";
 
 const Collaborate = () => {
   const [dialogState, setDialogState] = useState(false);
   const [docSharing, setDocSharing] = useState(false);
   const [editAccess, setEditAccess] = useState(false);
+  const { disconnect } = useCollabStore();
+  const [editAccLoader, seteditAccLoader] = useState(false);
 
   const doc = useAppStore((s) => s.document);
   const setDoc = useAppStore((s) => s.setDocument);
@@ -29,8 +32,13 @@ const Collaborate = () => {
   const onChangeDocSharing = async (state: boolean) => {
     if (!doc) return;
 
+    seteditAccLoader(true);
     const prev = docSharing;
     setDocSharing(state);
+
+    if(!state){
+      setEditAccess(false)
+    }
 
     try {
       const res = await axios.patch(
@@ -42,12 +50,8 @@ const Collaborate = () => {
       setDoc({
         ...doc,
         isShared: state,
+        editAccess:res.data.data.editAccess,
         sharingToken: res.data.data.sharingToken,
-        sharingUrl: state
-          ? process.env.NEXT_PUBLIC_BASE_URL +
-            "/documents?token=" +
-            res.data.data.sharingToken
-          : null,
       });
 
       if (state) {
@@ -57,6 +61,8 @@ const Collaborate = () => {
       }
     } catch (err) {
       setDocSharing(prev);
+    } finally {
+      seteditAccLoader(false);
     }
   };
 
@@ -77,10 +83,11 @@ const Collaborate = () => {
         ...doc,
         editAccess: state,
       });
-      if (state) {
-        toast.success("Editing enabled in document");
-      } else {
-        toast.success("Editing disabled in document");
+
+      toast.success("Editing Status Updated");
+
+      if (!state) {
+        disconnect();
       }
     } catch (err) {
       setEditAccess(prev);
@@ -117,6 +124,7 @@ const Collaborate = () => {
           {docSharing && (
             <div className="flex items-center space-x-2 mt-2">
               <Switch
+                disabled={editAccLoader}
                 id="allow-edit"
                 checked={editAccess}
                 onCheckedChange={onChangeEditAccess}
@@ -127,14 +135,24 @@ const Collaborate = () => {
             </div>
           )}
 
-          {doc?.sharingUrl && (
+          {doc?.sharingToken && (
             <>
               <p className="font-semibold">Sharing URL</p>
               <div className="flex space-x-2 items-center justify-between select-none text-[16px]">
-                <p>{doc?.sharingUrl.slice(0, -13) + "..."}</p>
+                <p>
+                  {(
+                    process.env.NEXT_PUBLIC_BASE_URL +
+                    "documents?token=" +
+                    doc.sharingToken
+                  ).slice(0, 47) + "....."}
+                </p>
                 <Button
                   onClick={() => {
-                    navigator.clipboard.writeText(doc?.sharingUrl as string);
+                    navigator.clipboard.writeText(
+                      (process.env.NEXT_PUBLIC_BASE_URL +
+                        "documents?token=" +
+                        doc.sharingToken) as string
+                    );
                     toast.success("Copied to clipboard");
                   }}
                 >

@@ -16,14 +16,48 @@ import TextAlign from "@tiptap/extension-text-align";
 import { FontSizeExtension } from "@/extensions/font-size";
 import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRef } from "react";
 import axios from "axios";
+import * as Y from "yjs";
+import { Collaboration } from "@tiptap/extension-collaboration";
+import { CollaborationCursor } from "@tiptap/extension-collaboration-cursor";
 import { useSearchParams } from "next/navigation";
+import { useCollabStore } from "@/store/use-collab-store";
 
+const INITIAL_EXTENSIONS = [
+  StarterKit,
+  LineHeightExtension,
+  TextAlign.configure({
+    types: ["heading", "paragraph"],
+  }),
+  TextStyle,
+  Color,
+  FontSizeExtension,
+  Highlight.configure({
+    multicolor: true,
+  }),
+  Link.configure({
+    openOnClick: false,
+    autolink: true,
+    defaultProtocol: "https",
+  }),
+  FontFamily,
+  TaskList,
+  TaskItem.configure({
+    nested: true,
+  }),
+  TableKit.configure({
+    table: { resizable: true },
+  }),
+  Image,
+  ImageResize,
+];
 const Editor = () => {
   const setEditor = useAppStore((s) => s.setEditor);
   const document = useAppStore((s) => s.document);
+  const yDoc = useCollabStore(s=>s.yDoc)
+
   const saveToDB = async (json: string) => {
     if (!document) return;
     try {
@@ -37,17 +71,38 @@ const Editor = () => {
     } catch (error) {
       console.log(error);
     }
-  };
+  }; 
 
   const debounceRef = useRef<
     | (((editor: EditorT) => void) & { cancel: () => void; flush: () => void })
     | null
   >(null);
 
+  // should be fixed
+  const [extensions, setExtensions] = useState(INITIAL_EXTENSIONS);
+
+  useEffect(() => {
+    if (yDoc) {
+      setExtensions((prev) => [
+        ...prev,
+        Collaboration.configure({
+          document: yDoc,
+        }),
+      ]);
+    } else {
+      setExtensions(INITIAL_EXTENSIONS);
+    }
+  }, [yDoc]);
+
   const params = useSearchParams();
 
   const editor = useEditor({
-    editable:params.get("token") && document && document.sharingToken===params.get("token") ? document.editAccess : true,
+    editable:
+      params.get("token") &&
+      document &&
+      document.sharingToken === params.get("token")
+        ? document.editAccess
+        : true,
     onCreate({ editor }) {
       setEditor(editor);
     },
@@ -56,7 +111,9 @@ const Editor = () => {
     },
     onUpdate({ editor }) {
       setEditor(editor);
-      debounceRef.current!(editor);
+      if (debounceRef?.current) {
+        debounceRef.current!(editor);
+      }
     },
     onFocus({ editor }) {
       setEditor(editor);
@@ -67,34 +124,7 @@ const Editor = () => {
     onSelectionUpdate({ editor }) {
       setEditor(editor);
     },
-    extensions: [
-      StarterKit,
-      LineHeightExtension,
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
-      TextStyle,
-      Color,
-      FontSizeExtension,
-      Highlight.configure({
-        multicolor: true,
-      }),
-      Link.configure({
-        openOnClick: false,
-        autolink: true,
-        defaultProtocol: "https",
-      }),
-      FontFamily,
-      TaskList,
-      TaskItem.configure({
-        nested: true,
-      }),
-      TableKit.configure({
-        table: { resizable: true },
-      }),
-      Image,
-      ImageResize,
-    ],
+    extensions: extensions,
     immediatelyRender: false,
     content: document?.json ? JSON.parse(document?.json) : "",
     editorProps: {
@@ -107,6 +137,10 @@ const Editor = () => {
   });
 
   useEffect(() => {
+    if (yDoc) {
+      debounceRef.current = null;
+      return;
+    }
     if (!debounceRef.current) {
       debounceRef.current = debounce((editor: EditorT) => {
         const json = JSON.stringify(editor.getJSON());
@@ -116,7 +150,7 @@ const Editor = () => {
     return () => {
       debounceRef.current?.cancel();
     };
-  }, []);
+  }, [yDoc]);
 
   useEffect(() => {
     const interval = setInterval(() => {

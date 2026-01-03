@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useAppStore } from "@/store/use-app-store";
-import DocumentRenderer from "../(document-components)/document-renderer";
+import { DocumentRenderer } from "../(document-components)/document-renderer";
 
 const DocumentIdPage = () => {
   const { setDocument } = useAppStore();

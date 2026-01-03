@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Pagination,
@@ -21,12 +21,15 @@ import {
 } from "@/components/ui/pagination";
 import { Trash2Icon } from "lucide-react";
 import { useAppStore } from "@/store/use-app-store";
+import { getCollabToken } from "@/lib/getCollabToken";
+import { useCollabStore } from "@/store/use-collab-store";
 
 const UserDocs = () => {
   const docs = useAppStore((s) => s.allDocuments);
   const setDocs = useAppStore((s) => s.setAllDocuments);
   const loading = useAppStore((s) => s.docLoader);
   const setLoading = useAppStore((s) => s.setDocLoader);
+  const setCollabToken = useCollabStore((s)=>s.setCollabToken);
 
   const searchParams = useSearchParams();
   const searchVal = searchParams.get("search");

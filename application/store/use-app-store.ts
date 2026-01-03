@@ -10,8 +10,7 @@ interface AppState {
     allDocuments: [] | Document[],
     docLoader: boolean,
     setDocLoader: (a: boolean) => void,
-    setAllDocuments: (document: Document[] | []) => void
-}
+    setAllDocuments: (document: Document[] | []) => void}
 
 export const useAppStore = create<AppState>((set) => ({
     editor: null,
@@ -21,5 +20,5 @@ export const useAppStore = create<AppState>((set) => ({
     allDocuments: [],
     docLoader: true,
     setDocLoader: (docLoader) => set({ docLoader }),
-    setAllDocuments: (allDocuments) => set({ allDocuments })
+    setAllDocuments: (allDocuments) => set({ allDocuments }),
 }))

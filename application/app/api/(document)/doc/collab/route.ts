@@ -32,7 +32,6 @@ export const GET = asyncHandler(async (req: NextRequest) => {
             json: true,
             createdAt: true,
             updatedAt: true,
-            collaborationToken: true,
             editAccess: true,
             name: true
         }
@@ -43,5 +42,4 @@ export const GET = asyncHandler(async (req: NextRequest) => {
     }
 
     return Response.json({ "data": document }, { status: 200 });
-
 })

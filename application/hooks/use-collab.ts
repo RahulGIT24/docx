@@ -8,6 +8,7 @@ import * as Y from "yjs";
 
 export function useCollaboration(document: Document) {
   const router = useRouter();
+  const isAuthenticated = useRef(false)
   const {
     socket,
     connect,
@@ -41,7 +42,6 @@ export function useCollaboration(document: Document) {
     });
   }
 
-
   useEffect(() => {
     if (!document?.editAccess) return;
 
@@ -59,7 +59,7 @@ export function useCollaboration(document: Document) {
 
   useEffect(() => {
     if (!socket || !document?.editAccess) return;
-
+    isAuthenticated.current == true
     const join = () => {
       socket.send(
         JSON.stringify({
@@ -106,6 +106,7 @@ export function useCollaboration(document: Document) {
 
           case "Invalid Token": {
             let retry = 0
+            isAuthenticated.current = false
             while (retry <= 2) {
               disconnect();
               const token = await generateCollabToken();
@@ -113,8 +114,10 @@ export function useCollaboration(document: Document) {
               connect(token);
               retry++
             }
-            toast.error("Authentication failed");
-            router.push("/");
+            if (!isAuthenticated.current) {
+              toast.error("Authentication failed");
+              router.push("/");
+            }
             break;
           }
         }

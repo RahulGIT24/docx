@@ -16,7 +16,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import { FontSizeExtension } from "@/extensions/font-size";
 import { LineHeightExtension } from "@/extensions/line-height";
 import { Ruler } from "./ruler";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRef } from "react";
 import axios from "axios";
 import * as Y from "yjs";
@@ -56,7 +56,23 @@ const INITIAL_EXTENSIONS = [
 const Editor = () => {
   const setEditor = useAppStore((s) => s.setEditor);
   const document = useAppStore((s) => s.document);
-  const yDoc = useCollabStore(s=>s.yDoc)
+  const yDoc = useCollabStore((s) => s.yDoc);
+
+  const extensions = useMemo(() => {
+    const base = [...INITIAL_EXTENSIONS];
+
+    if (yDoc) {
+      base.push(
+        Collaboration.configure({
+          document: yDoc,
+          field:'content'
+        })
+      );
+    }
+    console.log('rendering')
+
+    return base;
+  }, [yDoc]);
 
   const saveToDB = async (json: string) => {
     if (!document) return;
@@ -71,70 +87,61 @@ const Editor = () => {
     } catch (error) {
       console.log(error);
     }
-  }; 
+  };
 
   const debounceRef = useRef<
     | (((editor: EditorT) => void) & { cancel: () => void; flush: () => void })
     | null
   >(null);
 
-  // should be fixed
-  const [extensions, setExtensions] = useState(INITIAL_EXTENSIONS);
-
-  useEffect(() => {
-    if (yDoc) {
-      setExtensions((prev) => [
-        ...prev,
-        Collaboration.configure({
-          document: yDoc,
-        }),
-      ]);
-    } else {
-      setExtensions(INITIAL_EXTENSIONS);
-    }
-  }, [yDoc]);
-
   const params = useSearchParams();
 
-  const editor = useEditor({
-    editable:
-      params.get("token") &&
-      document &&
-      document.sharingToken === params.get("token")
-        ? document.editAccess
-        : true,
-    onCreate({ editor }) {
-      setEditor(editor);
-    },
-    onDestroy() {
-      setEditor(null);
-    },
-    onUpdate({ editor }) {
-      setEditor(editor);
-      if (debounceRef?.current) {
-        debounceRef.current!(editor);
-      }
-    },
-    onFocus({ editor }) {
-      setEditor(editor);
-    },
-    onBlur({ editor }) {
-      setEditor(editor);
-    },
-    onSelectionUpdate({ editor }) {
-      setEditor(editor);
-    },
-    extensions: extensions,
-    immediatelyRender: false,
-    content: document?.json ? JSON.parse(document?.json) : "",
-    editorProps: {
-      attributes: {
-        style: "padding-left: 56px; padding-right: 56px",
-        class:
-          "focus:outline-none print:border-0 bg-white border border-[#C7C7C7] flex flex-col min-h-[1054px] w-[816px] pt-10 pr-14 pb-10 cursor-text",
+  const editor = useEditor(
+    {
+      editable:
+        params.get("token") &&
+        document &&
+        document.sharingToken === params.get("token")
+          ? document.editAccess
+          : true,
+      onCreate({ editor }) {
+        setEditor(editor);
+      },
+      onDestroy() {
+        setEditor(null);
+      },
+      onUpdate({ editor }) {
+        setEditor(editor);
+        if (debounceRef?.current) {
+          debounceRef.current!(editor);
+        }
+      },
+      onFocus({ editor }) {
+        setEditor(editor);
+      },
+      onBlur({ editor }) {
+        setEditor(editor);
+      },
+      onSelectionUpdate({ editor }) {
+        setEditor(editor);
+      },
+      extensions: extensions,
+      immediatelyRender: false,
+      content: yDoc
+        ? null
+        : document?.json && document.sharingToken === ""
+        ? JSON.parse(document?.json)
+        : "",
+      editorProps: {
+        attributes: {
+          style: "padding-left: 56px; padding-right: 56px",
+          class:
+            "focus:outline-none print:border-0 bg-white border border-[#C7C7C7] flex flex-col min-h-[1054px] w-[816px] pt-10 pr-14 pb-10 cursor-text",
+        },
       },
     },
-  });
+    [yDoc]
+  );
 
   useEffect(() => {
     if (yDoc) {
@@ -153,12 +160,27 @@ const Editor = () => {
   }, [yDoc]);
 
   useEffect(() => {
+    if(yDoc) return
     const interval = setInterval(() => {
       debounceRef.current?.flush();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [yDoc]);
+
+  useEffect(() => {
+    if (!yDoc || !document?.json || !editor) return;
+
+    const meta = yDoc.getMap("meta");
+
+    if (meta.get("seeded")) return;
+
+    yDoc.transact(() => {
+      editor.commands.setContent(JSON.parse(document.json));
+      meta.set("seeded", true);
+    });
+  }, [yDoc, editor, document?.json]);
+
 
   return (
     <div className="size-full overflow-x-auto bg-[#F9FBFD] px-4 print:p-0 print:bg-white print:overflow-visible">

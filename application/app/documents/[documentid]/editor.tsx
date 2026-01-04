@@ -19,9 +19,7 @@ import { Ruler } from "./ruler";
 import { useEffect, useMemo, useState } from "react";
 import { useRef } from "react";
 import axios from "axios";
-import * as Y from "yjs";
 import { Collaboration } from "@tiptap/extension-collaboration";
-import { CollaborationCursor } from "@tiptap/extension-collaboration-cursor";
 import { useSearchParams } from "next/navigation";
 import { useCollabStore } from "@/store/use-collab-store";
 
@@ -65,14 +63,13 @@ const Editor = () => {
       base.push(
         Collaboration.configure({
           document: yDoc,
-          field:'content'
+          field: "content",
         })
       );
     }
-    console.log('rendering')
 
     return base;
-  }, [yDoc]);
+  }, [!!yDoc]);
 
   const saveToDB = async (json: string) => {
     if (!document) return;
@@ -127,11 +124,7 @@ const Editor = () => {
       },
       extensions: extensions,
       immediatelyRender: false,
-      content: yDoc
-        ? null
-        : document?.json && document.sharingToken === ""
-        ? JSON.parse(document?.json)
-        : "",
+      content: document?.json && !document.sharingToken ? JSON.parse(document?.json) : null,
       editorProps: {
         attributes: {
           style: "padding-left: 56px; padding-right: 56px",
@@ -160,7 +153,7 @@ const Editor = () => {
   }, [yDoc]);
 
   useEffect(() => {
-    if(yDoc) return
+    if (yDoc) return;
     const interval = setInterval(() => {
       debounceRef.current?.flush();
     }, 5000);
@@ -170,7 +163,6 @@ const Editor = () => {
 
   useEffect(() => {
     if (!yDoc || !document?.json || !editor) return;
-
     const meta = yDoc.getMap("meta");
 
     if (meta.get("seeded")) return;
@@ -180,7 +172,6 @@ const Editor = () => {
       meta.set("seeded", true);
     });
   }, [yDoc, editor, document?.json]);
-
 
   return (
     <div className="size-full overflow-x-auto bg-[#F9FBFD] px-4 print:p-0 print:bg-white print:overflow-visible">

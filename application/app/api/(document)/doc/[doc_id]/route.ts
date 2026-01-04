@@ -3,6 +3,7 @@ import { ApiError } from '@/lib/apiError';
 import { asyncHandler } from '@/lib/asyncHandler';
 import { clearDocFromRedis, getDocumentFromRedis, setDocumentInRedis } from '@/lib/document';
 import { options } from '@/lib/options';
+import { persist } from '@/lib/persistDocFunction';
 import { generateToken } from '@/lib/randomToken';
 import { getServerSession } from 'next-auth';
 import { NextRequest } from 'next/server';
@@ -93,13 +94,14 @@ export const PATCH = asyncHandler(async (request: NextRequest, { params }: { par
 
     data.isShared = isShared
     data.editAccess = editAccess
-    
+
     if (isShared === false) {
         data.sharingToken = null;
         data.editAccess=false;
     }
     if (isShared === true) {
         data.sharingToken = generateToken();
+        await persist(`doc:${id}`)
     }
 
     const document = await prisma.documents.update({

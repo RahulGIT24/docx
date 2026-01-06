@@ -101,6 +101,9 @@ export const PATCH = asyncHandler(async (request: NextRequest, { params }: { par
     }
     if (isShared === true) {
         data.sharingToken = generateToken();
+    }
+
+    if(editAccess){
         await persist(`doc:${id}`)
     }
 

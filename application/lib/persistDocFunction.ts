@@ -4,6 +4,7 @@ import { clearDocFromRedis, getDocumentFromRedis } from "./document";
 export async function persist(key:string) {
     try {
         const json = await getDocumentFromRedis(key) as string;
+        if(!json) return;
         const [_, id] = key.split(':');
         await prisma.documents.update({
             where: {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Document } from "@/types/types";
@@ -20,26 +20,31 @@ export function useCollaboration(document: Document) {
 
   const yDocRef = useRef<null | Y.Doc>(null)
 
-  function startYjs(ws: WebSocket, docId: number) {
+  function startYjs(ws: WebSocket) {
+    if (yDocRef.current) return;
+    let synced = false;
+    
     const ydoc = new Y.Doc();
-    const json = document.json
-    const type = ydoc.getXmlFragment('content')
-    if (json && type.length == 0) {
 
-    }
     yDocRef.current = ydoc
     setYDoc(ydoc);
 
     ydoc.on("update", (update: Uint8Array) => {
+      if (!synced) return;
       ws.send(update);
     });
 
     ws.addEventListener("message", (event) => {
       if (event.data instanceof ArrayBuffer) {
+        console.log("Message updated")
         const update = new Uint8Array(event.data);
         Y.applyUpdate(ydoc, update);
+        synced = true;
+        console.log("Synced is true")
       }
     });
+
+    // ws.send(Y.encodeStateAsUpdate(ydoc));
   }
 
   useEffect(() => {
@@ -83,7 +88,7 @@ export function useCollaboration(document: Document) {
 
         if (msg.type === "collab-approved") {
           console.log("Collaboration approved for doc:", msg.docId);
-          startYjs(socket, document.id)
+          startYjs(socket)
           return;
         }
 

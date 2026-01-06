@@ -69,7 +69,7 @@ const Editor = () => {
     }
 
     return base;
-  }, [!!yDoc]);
+  }, [yDoc]);
 
   const saveToDB = async (json: string) => {
     if (!document) return;
@@ -124,7 +124,7 @@ const Editor = () => {
       },
       extensions: extensions,
       immediatelyRender: false,
-      content: document?.json && !document.sharingToken ? JSON.parse(document?.json) : null,
+      content: yDoc ? null : JSON.parse(document?.json ?? ""),
       editorProps: {
         attributes: {
           style: "padding-left: 56px; padding-right: 56px",
@@ -133,7 +133,7 @@ const Editor = () => {
         },
       },
     },
-    [yDoc]
+    [extensions]
   );
 
   useEffect(() => {

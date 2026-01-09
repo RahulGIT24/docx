@@ -8,8 +8,8 @@ import { generateToken } from '@/lib/randomToken';
 import { getServerSession } from 'next-auth';
 import { NextRequest } from 'next/server';
 
-export const GET = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {
-    const id = (await params).doc_id;
+export const GET = asyncHandler(async (request: NextRequest, context: { params: Promise<{ doc_id: string }> }) => {
+    const id = (await (await context).params).doc_id;
     const session = await getServerSession(options);
 
     if (!session || !session.user.email) {
@@ -60,8 +60,8 @@ interface Update {
     editAccess?: boolean
 }
 
-export const PATCH = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {
-    const id = (await params).doc_id;
+export const PATCH = asyncHandler(async (request: NextRequest, context: { params: Promise<{ doc_id: string }> }) => {
+    const id = (await (await context).params).doc_id;
     const body = await request.json() as Update;
 
     const session = await getServerSession(options);
@@ -123,8 +123,8 @@ export const PATCH = asyncHandler(async (request: NextRequest, { params }: { par
     return Response.json({ "data": document, }, { status: 200 });
 })
 
-export const DELETE = asyncHandler(async (request: NextRequest, { params }: { params: { doc_id: string } }) => {
-    const id = (await params).doc_id;
+export const DELETE = asyncHandler(async (request: NextRequest, context: { params: Promise<{ doc_id: string }> }) => {
+    const id = (await (await context).params).doc_id;
     const session = await getServerSession(options);
 
 

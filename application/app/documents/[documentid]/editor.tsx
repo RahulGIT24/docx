@@ -124,7 +124,7 @@ const Editor = () => {
       },
       extensions: extensions,
       immediatelyRender: false,
-      content: yDoc ? null : JSON.parse(document?.json ?? ""),
+      content: yDoc ? null : document?.json ? JSON.parse(document?.json) : "",
       editorProps: {
         attributes: {
           style: "padding-left: 56px; padding-right: 56px",

@@ -4,7 +4,8 @@ import { predefinedTemplates } from "../lib/template";
 async function main() {
     try {
         await prisma.template.createMany({
-            data: predefinedTemplates
+            data: predefinedTemplates,
+            skipDuplicates:true
         })
         return "Templates added in DB";
     } catch (error) {

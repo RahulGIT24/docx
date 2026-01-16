@@ -121,7 +121,7 @@ const Collaborate = () => {
             </Label>
           </div>
 
-          {docSharing && (
+          {/* {docSharing && (
             <div className="flex items-center space-x-2 mt-2">
               <Switch
                 disabled={editAccLoader}
@@ -133,7 +133,7 @@ const Collaborate = () => {
                 {editAccess ? "Editing allowed" : "Allow editing"}
               </Label>
             </div>
-          )}
+          )} */}
 
           {doc?.sharingToken && (
             <>

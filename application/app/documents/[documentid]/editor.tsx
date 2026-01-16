@@ -122,7 +122,60 @@ const Editor = () => {
     }
   };
 
+<<<<<<< HEAD
   // Debounce saving
+=======
+  const debounceRef = useRef<
+    | (((editor: EditorT) => void) & { cancel: () => void; flush: () => void })
+    | null
+  >(null);
+
+  const params = useSearchParams();
+
+  const editor = useEditor(
+    {
+      editable:
+        params.get("token") &&
+        document &&
+        document.sharingToken === params.get("token")
+          ? document.editAccess
+          : true,
+      onCreate({ editor }) {
+        setEditor(editor);
+      },
+      onDestroy() {
+        setEditor(null);
+      },
+      onUpdate({ editor }) {
+        setEditor(editor);
+        if (debounceRef?.current) {
+          debounceRef.current!(editor);
+        }
+      },
+      onFocus({ editor }) {
+        setEditor(editor);
+      },
+      onBlur({ editor }) {
+        setEditor(editor);
+      },
+      onSelectionUpdate({ editor }) {
+        setEditor(editor);
+      },
+      extensions: extensions,
+      immediatelyRender: false,
+      content: yDoc ? null : document?.json ? JSON.parse(document.json) : undefined,
+      editorProps: {
+        attributes: {
+          style: "padding-left: 56px; padding-right: 56px",
+          class:
+            "focus:outline-none print:border-0 bg-white border border-[#C7C7C7] flex flex-col min-h-[1054px] w-[816px] pt-10 pr-14 pb-10 cursor-text",
+        },
+      },
+    },
+    [extensions]
+  );
+
+>>>>>>> docker
   useEffect(() => {
     if (!debounceRef.current) {
       debounceRef.current = debounce((editor: EditorT) => {

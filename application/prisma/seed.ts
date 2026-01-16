@@ -9,6 +9,7 @@ async function main() {
         })
         return "Templates added in DB";
     } catch (error) {
+        console.log(error)
         return "Error while loading predefined templates "
     }
 }

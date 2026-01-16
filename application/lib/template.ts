@@ -21,6 +21,6 @@ export const predefinedTemplates:PredefinedTemplatesT[] = [
     {
         name:"Party Invitation",
         json:JSON.stringify(partyInvitation),
-        preview:`${process.env.BASE_URL}/party_invite.png`
+        preview:`/party_invite.png`
     },
 ]

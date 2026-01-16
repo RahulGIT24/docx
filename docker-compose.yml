@@ -1,0 +1,83 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: smarttube
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+  application:
+    build:
+      context: ./application
+      dockerfile: Dockerfile.dev
+    image: gdocs-main
+    container_name: nextjs-app
+    command: ["sh","-c","npx prisma generate && npx prisma migrate deploy && pnpm run seed:db && pnpm run dev"]
+    env_file:
+      - ./application/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:root@postgres:5432/smarttube?schema=public
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - backend
+  
+  persist_worker:
+    image: gdocs-main
+    command: ["sh","-c","npx prisma generate && pnpm run persist"]
+    env_file:
+      - ./application/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:root@postgres:5432/smarttube?schema=public
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - backend
+  delete_worker:
+    image: gdocs-main
+    command: ["sh","-c","npx prisma generate && pnpm run hard-delete"]
+    env_file:
+      - ./application/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:root@postgres:5432/smarttube?schema=public
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  backend:
+    driver: bridge
